@@ -40,7 +40,8 @@ class TypeQuizViewModel(
                 selectedAnswer = answer,
                 isCorrect = isCorrect,
                 correctAnswer = correct,
-                streak = newStreak
+                streak = newStreak,
+                answeredAtMillis = System.currentTimeMillis()
             )
         }
     }
@@ -52,7 +53,8 @@ class TypeQuizViewModel(
                 question = question,
                 selectedAnswer = null,
                 isCorrect = null,
-                correctAnswer = null
+                correctAnswer = null,
+                answeredAtMillis = null
             )
         }
     }

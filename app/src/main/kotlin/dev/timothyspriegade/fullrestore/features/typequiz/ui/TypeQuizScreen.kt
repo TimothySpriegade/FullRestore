@@ -17,17 +17,21 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -36,6 +40,7 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,10 +58,17 @@ import dev.timothyspriegade.fullrestore.domain.model.Effectiveness
 import dev.timothyspriegade.fullrestore.domain.model.PokemonType
 import dev.timothyspriegade.fullrestore.domain.model.QuizMode
 import dev.timothyspriegade.fullrestore.features.typequiz.viewmodel.TypeQuizViewModel
+import kotlinx.coroutines.delay
 
 @Composable
 fun TypeQuizRoute(viewModel: TypeQuizViewModel = viewModel()) {
     val state by viewModel.state.collectAsState()
+    LaunchedEffect(state.answeredAtMillis) {
+        if (state.answeredAtMillis != null) {
+            delay(3000)
+            viewModel.nextQuestion()
+        }
+    }
     TypeQuizScreen(
         mode = state.mode,
         attacker = state.question?.attacker,
@@ -68,7 +80,8 @@ fun TypeQuizRoute(viewModel: TypeQuizViewModel = viewModel()) {
         streak = state.streak,
         onModeChange = viewModel::updateMode,
         onAnswer = viewModel::selectAnswer,
-        onNext = viewModel::nextQuestion
+        onNext = viewModel::nextQuestion,
+        showNextButton = false
     )
 }
 
@@ -84,8 +97,10 @@ fun TypeQuizScreen(
     streak: Int,
     onModeChange: (QuizMode) -> Unit,
     onAnswer: (Effectiveness) -> Unit,
-    onNext: () -> Unit
+    onNext: () -> Unit,
+    showNextButton: Boolean
 ) {
+    val bottomBarPadding = 80.dp
     val gradient = Brush.verticalGradient(
         colors = listOf(
             MaterialTheme.colorScheme.background,
@@ -112,16 +127,17 @@ fun TypeQuizScreen(
                 },
                 actions = {
                     StreakBadge(streak = streak)
-                    Spacer(modifier = Modifier.width(16.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                 }
             )
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 20.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .windowInsetsPadding(WindowInsets.safeDrawing)
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
+                    .padding(bottom = bottomBarPadding),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 ModeSelector(mode = mode, onModeChange = onModeChange)
                 QuestionCard(
@@ -134,12 +150,14 @@ fun TypeQuizScreen(
                     isCorrect = isCorrect,
                     correctAnswer = correctAnswer,
                     onAnswer = onAnswer,
-                    onNext = onNext
+                    onNext = onNext,
+                    showNextButton = showNextButton
                 )
                 TipsCard()
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(2.dp))
             }
         }
+        BottomNavBar(modifier = Modifier.align(Alignment.BottomCenter))
     }
 }
 
@@ -174,25 +192,32 @@ private fun ModeSelector(mode: QuizMode, onModeChange: (QuizMode) -> Unit) {
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(14.dp)) {
             Text(
                 "Training mode",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             ModeOption(
                 title = "Single defender",
                 subtitle = "1 attacker vs 1 type",
                 selected = mode == QuizMode.SINGLE_TYPE,
                 onClick = { onModeChange(QuizMode.SINGLE_TYPE) }
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             ModeOption(
                 title = "Dual defender",
                 subtitle = "1 attacker vs 2 types",
                 selected = mode == QuizMode.DUAL_TYPE,
                 onClick = { onModeChange(QuizMode.DUAL_TYPE) }
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            ModeOption(
+                title = "Random defenders",
+                subtitle = "1 or 2 types each question",
+                selected = mode == QuizMode.RANDOM_DEFENDERS,
+                onClick = { onModeChange(QuizMode.RANDOM_DEFENDERS) }
             )
         }
     }
@@ -218,7 +243,7 @@ private fun ModeOption(
         onClick = onClick
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             RadioButton(selected = selected, onClick = onClick)
@@ -245,13 +270,13 @@ private fun QuestionCard(
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 "What is the damage modifier?",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
@@ -290,19 +315,20 @@ private fun AnswerCard(
     isCorrect: Boolean?,
     correctAnswer: Effectiveness?,
     onAnswer: (Effectiveness) -> Unit,
-    onNext: () -> Unit
+    onNext: () -> Unit,
+    showNextButton: Boolean
 ) {
     Card(
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 "Choose the effectiveness",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Effectiveness.ordered.forEach { option ->
                     val selected = option == selectedAnswer
@@ -320,7 +346,7 @@ private fun AnswerCard(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Box(
@@ -347,7 +373,7 @@ private fun AnswerCard(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             AnimatedContent(
                 targetState = selectedAnswer != null,
                 transitionSpec = {
@@ -356,7 +382,7 @@ private fun AnswerCard(
                 },
                 label = "answer_state"
             ) { answered ->
-                if (answered) {
+                if (answered && showNextButton) {
                     Button(
                         onClick = onNext,
                         modifier = Modifier.fillMaxWidth()
@@ -365,7 +391,7 @@ private fun AnswerCard(
                     }
                 } else {
                     Text(
-                        "Select an answer to reveal the result.",
+                        if (answered) "Next question loading..." else "Select an answer to reveal the result.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -381,18 +407,46 @@ private fun TipsCard() {
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column(modifier = Modifier.padding(14.dp)) {
             Text(
                 "Quiz tip",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 "Remember that dual types stack. A 2x and 0.5x combine into neutral damage.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+@Composable
+private fun BottomNavBar(modifier: Modifier = Modifier) {
+    NavigationBar(
+        modifier = modifier
+            .fillMaxWidth()
+            .navigationBarsPadding(),
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 4.dp
+    ) {
+        NavigationBarItem(
+            selected = true,
+            onClick = { },
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(VgcTeal)
+                )
+            },
+            label = { Text("Type Quiz") },
+            colors = NavigationBarItemDefaults.colors(
+                indicatorColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        )
     }
 }

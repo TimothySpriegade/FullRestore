@@ -12,7 +12,12 @@ class GenerateTypeQuizQuestionUseCase(
         val types = PokemonType.entries
         val attacker = types[random.nextInt(types.size)]
         val defenderPrimary = types[random.nextInt(types.size)]
-        val defenderSecondary = if (mode == QuizMode.DUAL_TYPE) {
+        val useDual = when (mode) {
+            QuizMode.SINGLE_TYPE -> false
+            QuizMode.DUAL_TYPE -> true
+            QuizMode.RANDOM_DEFENDERS -> random.nextBoolean()
+        }
+        val defenderSecondary = if (useDual) {
             var secondary = types[random.nextInt(types.size)]
             while (secondary == defenderPrimary) {
                 secondary = types[random.nextInt(types.size)]

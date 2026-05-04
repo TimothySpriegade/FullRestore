@@ -10,5 +10,6 @@ data class TypeQuizUiState(
     val selectedAnswer: Effectiveness? = null,
     val isCorrect: Boolean? = null,
     val correctAnswer: Effectiveness? = null,
-    val streak: Int = 0
+    val streak: Int = 0,
+    val answeredAtMillis: Long? = null
 )

@@ -6,7 +6,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
-private val VgcFontFamily = FontFamily.Serif
+private val VgcFontFamily = FontFamily.SansSerif
 
 val VgcTypography = Typography(
     displayLarge = TextStyle(
@@ -52,7 +52,7 @@ val VgcTypography = Typography(
         lineHeight = 20.sp
     ),
     labelLarge = TextStyle(
-        fontFamily = SoraFamily,
+        fontFamily = VgcFontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 12.sp,
         lineHeight = 16.sp
