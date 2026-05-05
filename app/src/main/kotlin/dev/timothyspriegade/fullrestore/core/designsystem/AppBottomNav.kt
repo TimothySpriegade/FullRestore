@@ -2,7 +2,6 @@ package dev.timothyspriegade.fullrestore.core.designsystem
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -17,9 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 
-private val NAVIGATION_BAR_HEIGHT = 64.dp
+private val NAVIGATION_BAR_HEIGHT = 80.dp
 private val NAVIGATION_BAR_TONAL_ELEVATION = 0.dp
-private val DEFAULT_ICON_SIZE = 10.dp
+private val DEFAULT_ICON_SIZE = 6.dp
 
 data class AppNavItem(
     val label: String,
@@ -35,8 +34,7 @@ fun AppBottomNav(items: List<AppNavItem>, modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .height(NAVIGATION_BAR_HEIGHT),
         containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = NAVIGATION_BAR_TONAL_ELEVATION,
-        windowInsets = WindowInsets(0, 0, 0, 0)
+        tonalElevation = NAVIGATION_BAR_TONAL_ELEVATION
     ) {
         items.forEach { item ->
             NavigationBarItem(
@@ -52,7 +50,11 @@ fun AppBottomNav(items: List<AppNavItem>, modifier: Modifier = Modifier) {
                 },
                 label = { Text(item.label) },
                 colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                    selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    selectedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             )
         }

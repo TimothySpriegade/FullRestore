@@ -66,7 +66,7 @@ private const val ANIMATION_DURATION_MS = 300
 
 // Layout constants
 private val SCREEN_PADDING_HORIZONTAL = 16.dp
-private val SCREEN_PADDING_VERTICAL = 10.dp
+private val SCREEN_PADDING_VERTICAL = 0.dp
 private val MAIN_CONTENT_SPACING = 10.dp
 private val BOTTOM_SPACER_HEIGHT = 2.dp
 private val TOP_BAR_ACTION_SPACING = 12.dp
@@ -109,7 +109,10 @@ private val ANSWER_OPTION_DOT_SIZE = 10.dp
 private val ANSWER_OPTION_SPACING = 12.dp
 
 @Composable
-fun TypeQuizRoute(viewModel: TypeQuizViewModel = viewModel()) {
+fun TypeQuizRoute(
+    navItems: List<AppNavItem>,
+    viewModel: TypeQuizViewModel = viewModel()
+) {
     val state by viewModel.state.collectAsState()
     LaunchedEffect(state.answeredAtMillis) {
         if (state.answeredAtMillis != null) {
@@ -129,7 +132,8 @@ fun TypeQuizRoute(viewModel: TypeQuizViewModel = viewModel()) {
         onModeChange = viewModel::updateMode,
         onAnswer = viewModel::selectAnswer,
         onNext = viewModel::nextQuestion,
-        showNextButton = false
+        showNextButton = false,
+        navItems = navItems
     )
 }
 
@@ -146,7 +150,8 @@ fun TypeQuizScreen(
     onModeChange: (QuizMode) -> Unit,
     onAnswer: (Effectiveness) -> Unit,
     onNext: () -> Unit,
-    showNextButton: Boolean
+    showNextButton: Boolean,
+    navItems: List<AppNavItem>
 ) {
     val gradient = Brush.verticalGradient(
         colors = listOf(
@@ -181,13 +186,7 @@ fun TypeQuizScreen(
         },
         bottomBar = {
             AppBottomNav(
-                items = listOf(
-                    AppNavItem(
-                        label = "Type Quiz",
-                        selected = true,
-                        onClick = { }
-                    )
-                )
+                items = navItems
             )
         }
     ) { innerPadding ->
