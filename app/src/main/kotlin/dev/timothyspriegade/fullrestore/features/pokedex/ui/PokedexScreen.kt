@@ -62,6 +62,7 @@ import dev.timothyspriegade.fullrestore.core.designsystem.TypeBadge
 import dev.timothyspriegade.fullrestore.core.designsystem.VgcLeaf
 import dev.timothyspriegade.fullrestore.data.local.pokemon.PokemonEntity
 import dev.timothyspriegade.fullrestore.domain.model.PokemonType
+import dev.timothyspriegade.fullrestore.domain.usecase.CalculatePokemonStatsUseCase
 import dev.timothyspriegade.fullrestore.features.pokedex.viewmodel.PokedexViewModel
 
 private val SCREEN_PADDING_HORIZONTAL = 16.dp
@@ -96,7 +97,8 @@ fun PokedexRoute(
 fun PokedexScreen(
     navItems: List<AppNavItem>,
     pokemon: List<PokemonEntity>,
-    isLoading: Boolean
+    isLoading: Boolean,
+    calculatePokemonStatsUseCase: CalculatePokemonStatsUseCase = CalculatePokemonStatsUseCase()
 ) {
     val gradient = Brush.verticalGradient(
         colors = listOf(
@@ -109,6 +111,9 @@ fun PokedexScreen(
     val query = queryState.value.text.trim()
     var isFilterOpen by remember { mutableStateOf(false) }
     var selectedType by remember { mutableStateOf<PokemonType?>(null) }
+    var isTailwindActive by remember { mutableStateOf(false) }
+    var isFullInvest by remember { mutableStateOf(false) }
+    var isNatureActive by remember { mutableStateOf(false) }
     var showLegendaryOnly by remember { mutableStateOf(false) }
     var showMythicalOnly by remember { mutableStateOf(false) }
     var showBabyOnly by remember { mutableStateOf(false) }
@@ -134,6 +139,15 @@ fun PokedexScreen(
         }
         .filter { entry ->
             entry.baseStatTotal >= minBaseStatTotal
+        }
+        .map { entry ->
+            val stats = calculatePokemonStatsUseCase.execute(
+                pokemon = entry,
+                isTailwindActive = isTailwindActive,
+                isFullInvest = isFullInvest,
+                isNatureActive = isNatureActive
+            )
+            entry to stats
         }
 
     Scaffold(
@@ -203,6 +217,12 @@ fun PokedexScreen(
                         onMythicalToggle = { showMythicalOnly = it },
                         showBabyOnly = showBabyOnly,
                         onBabyToggle = { showBabyOnly = it },
+                        tailwindActive = isTailwindActive,
+                        onTailwindToggle = { isTailwindActive = it },
+                        fullInvestActive = isFullInvest,
+                        onFullInvestToggle = { isFullInvest = it },
+                        natureActive = isNatureActive,
+                        onNatureToggle = { isNatureActive = it },
                         minBaseStatTotal = minBaseStatTotal,
                         onMinBaseStatTotalChange = { minBaseStatTotal = it }
                     )
@@ -219,8 +239,8 @@ fun PokedexScreen(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(CARD_SPACING)
                     ) {
-                        items(filteredPokemon, key = { it.pokedexNumber }) { entry ->
-                            PokedexCard(entry = entry)
+                        items(filteredPokemon, key = { it.first.pokedexNumber }) { (entry, stats) ->
+                            PokedexCard(entry = entry, stats = stats)
                         }
                         item {
                             Spacer(modifier = Modifier.height(6.dp))
@@ -233,7 +253,7 @@ fun PokedexScreen(
 }
 
 @Composable
-private fun PokedexCard(entry: PokemonEntity) {
+private fun PokedexCard(entry: PokemonEntity, stats: Map<String, Int>) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(CARD_CORNER_RADIUS),
@@ -293,17 +313,41 @@ private fun PokedexCard(entry: PokemonEntity) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    StatRow(label = "HP", value = entry.hp, modifier = Modifier.weight(1f))
-                    StatRow(label = "Atk", value = entry.attack, modifier = Modifier.weight(1f))
-                    StatRow(label = "Def", value = entry.defense, modifier = Modifier.weight(1f))
+                    StatRow(
+                        label = "HP",
+                        value = stats["hp"] ?: entry.hp,
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatRow(
+                        label = "Atk",
+                        value = stats["attack"] ?: entry.attack,
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatRow(
+                        label = "Def",
+                        value = stats["defense"] ?: entry.defense,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    StatRow(label = "SpA", value = entry.spAttack, modifier = Modifier.weight(1f))
-                    StatRow(label = "SpD", value = entry.spDefense, modifier = Modifier.weight(1f))
-                    StatRow(label = "Spe", value = entry.speed, modifier = Modifier.weight(1f))
+                    StatRow(
+                        label = "SpA",
+                        value = stats["spAttack"] ?: entry.spAttack,
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatRow(
+                        label = "SpD",
+                        value = stats["spDefense"] ?: entry.spDefense,
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatRow(
+                        label = "Spe",
+                        value = stats["speed"] ?: entry.speed,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }
@@ -371,6 +415,12 @@ private fun FilterPanel(
     onMythicalToggle: (Boolean) -> Unit,
     showBabyOnly: Boolean,
     onBabyToggle: (Boolean) -> Unit,
+    tailwindActive: Boolean,
+    onTailwindToggle: (Boolean) -> Unit,
+    fullInvestActive: Boolean,
+    onFullInvestToggle: (Boolean) -> Unit,
+    natureActive: Boolean,
+    onNatureToggle: (Boolean) -> Unit,
     minBaseStatTotal: Int,
     onMinBaseStatTotalChange: (Int) -> Unit
 ) {
@@ -419,6 +469,31 @@ private fun FilterPanel(
                     label = "Baby",
                     selected = showBabyOnly,
                     onClick = { onBabyToggle(!showBabyOnly) }
+                )
+            }
+            Text(
+                "Pokemon Champions Calculations",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Row(
+                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(FILTER_CHIP_SPACING)
+            ) {
+                FilterChip(
+                    label = "Tailwind",
+                    selected = tailwindActive,
+                    onClick = { onTailwindToggle(!tailwindActive) }
+                )
+                FilterChip(
+                    label = "Full Invest (32 SP)",
+                    selected = fullInvestActive,
+                    onClick = { onFullInvestToggle(!fullInvestActive) }
+                )
+                FilterChip(
+                    label = "Positive Nature (+10%)",
+                    selected = natureActive,
+                    onClick = { onNatureToggle(!natureActive) }
                 )
             }
             Text(

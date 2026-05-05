@@ -1,14 +1,28 @@
 # Full Restore
 
-Full Restore is a Jetpack Compose Android app for practicing Pokemon type matchups. It delivers a
-fast, single-screen quiz loop with streak tracking, multiple quiz modes, and a settings tab with a
-persistent light mode toggle.
+> Full Restore is a Jetpack Compose Android app for practicing Pokemon type matchups and is supposed
+> to work as a handy toobox for competetive players.
+
+## Motivation
+
+I have been a Pokémon Competitive player on and off since 2016, but due to Pokémon Champions,
+I have just switched formats from Singles to Doubles/VGC. After a two-year break,
+I came back to competitive play and realized that my knowledge was rusty, especially with regard to
+type matchups and speed tiers.
+
+So I looked for apps and tools to help me learn these things and maybe even look them up while being
+in Team Select or on the go.
+I found a couple of tools, but most of them were either A. only online or B. full of ads,
+which I found annoying. Then I remembered that I am a software developer and our favourite saying
+is 'I'll just do it myself',
+so I thought of this little toolbox for VGC Pokémon.
 
 ## Highlights
 - Type effectiveness quiz with instant feedback and streak tracking.
 - Three quiz modes: single defender, dual defender, or random defenders.
 - Bottom navigation with a dedicated Settings tab.
 - Pokedex tab with searchable list, sprite images, and filters.
+- Settings tab where each feature is taggable for further customizability
 - Light mode toggle persists across restarts using DataStore preferences.
 - Custom Material 3 color system and type badges for clear visual cues.
 
