@@ -11,6 +11,7 @@ import androidx.compose.material.icons.rounded.School
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,45 +37,68 @@ class MainActivity : ComponentActivity() {
             val context = LocalContext.current
             val settingsStore = remember { UserSettingsStore(context.applicationContext) }
             val isLightModeEnabled by settingsStore.isLightModeEnabled.collectAsState(initial = false)
+            val isTypeQuizEnabled by settingsStore.isTypeQuizEnabled.collectAsState(initial = true)
+            val isPokedexEnabled by settingsStore.isPokedexEnabled.collectAsState(initial = true)
             var selectedTab by rememberSaveable { mutableStateOf(AppTab.TYPE_QUIZ) }
             val scope = rememberCoroutineScope()
 
-            FullRestoreTheme(darkTheme = !isLightModeEnabled) {
-                val navItems = listOf(
-                    AppNavItem(
-                        label = "Type Quiz",
-                        selected = selectedTab == AppTab.TYPE_QUIZ,
-                        onClick = { selectedTab = AppTab.TYPE_QUIZ },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Rounded.School,
-                                contentDescription = "Type Quiz"
-                            )
-                        }
-                    ),
-                    AppNavItem(
-                        label = "Pokedex",
-                        selected = selectedTab == AppTab.POKEDEX,
-                        onClick = { selectedTab = AppTab.POKEDEX },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.ViewList,
-                                contentDescription = "Pokedex"
-                            )
-                        }
-                    ),
-                    AppNavItem(
-                        label = "Settings",
-                        selected = selectedTab == AppTab.SETTINGS,
-                        onClick = { selectedTab = AppTab.SETTINGS },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Rounded.Settings,
-                                contentDescription = "Settings"
-                            )
-                        }
-                    )
+            LaunchedEffect(isTypeQuizEnabled, isPokedexEnabled) {
+                val availableTabs = listOfNotNull(
+                    if (isTypeQuizEnabled) AppTab.TYPE_QUIZ else null,
+                    if (isPokedexEnabled) AppTab.POKEDEX else null,
+                    AppTab.SETTINGS
                 )
+                if (selectedTab !in availableTabs) {
+                    selectedTab = availableTabs.firstOrNull() ?: AppTab.SETTINGS
+                }
+            }
+
+            FullRestoreTheme(darkTheme = !isLightModeEnabled) {
+                val navItems = buildList {
+                    if (isTypeQuizEnabled) {
+                        add(
+                            AppNavItem(
+                                label = "Type Quiz",
+                                selected = selectedTab == AppTab.TYPE_QUIZ,
+                                onClick = { selectedTab = AppTab.TYPE_QUIZ },
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Rounded.School,
+                                        contentDescription = "Type Quiz"
+                                    )
+                                }
+                            )
+                        )
+                    }
+                    if (isPokedexEnabled) {
+                        add(
+                            AppNavItem(
+                                label = "Pokedex",
+                                selected = selectedTab == AppTab.POKEDEX,
+                                onClick = { selectedTab = AppTab.POKEDEX },
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Rounded.ViewList,
+                                        contentDescription = "Pokedex"
+                                    )
+                                }
+                            )
+                        )
+                    }
+                    add(
+                        AppNavItem(
+                            label = "Settings",
+                            selected = selectedTab == AppTab.SETTINGS,
+                            onClick = { selectedTab = AppTab.SETTINGS },
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Rounded.Settings,
+                                    contentDescription = "Settings"
+                                )
+                            }
+                        )
+                    )
+                }
 
                 Surface(modifier = Modifier.fillMaxSize()) {
                     when (selectedTab) {
@@ -84,6 +108,14 @@ class MainActivity : ComponentActivity() {
                             isLightModeEnabled = isLightModeEnabled,
                             onLightModeToggle = { enabled ->
                                 scope.launch { settingsStore.setLightModeEnabled(enabled) }
+                            },
+                            isTypeQuizEnabled = isTypeQuizEnabled,
+                            onTypeQuizToggle = { enabled ->
+                                scope.launch { settingsStore.setTypeQuizEnabled(enabled) }
+                            },
+                            isPokedexEnabled = isPokedexEnabled,
+                            onPokedexToggle = { enabled ->
+                                scope.launch { settingsStore.setPokedexEnabled(enabled) }
                             },
                             navItems = navItems
                         )

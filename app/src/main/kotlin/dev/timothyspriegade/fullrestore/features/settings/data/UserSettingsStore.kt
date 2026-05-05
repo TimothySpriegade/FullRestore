@@ -21,13 +21,35 @@ class UserSettingsStore(private val context: Context) {
         preferences[IS_LIGHT_MODE_ENABLED] ?: false
     }
 
+    val isTypeQuizEnabled: Flow<Boolean> = dataStore.data.map { preferences ->
+        preferences[IS_TYPE_QUIZ_ENABLED] ?: true
+    }
+
+    val isPokedexEnabled: Flow<Boolean> = dataStore.data.map { preferences ->
+        preferences[IS_POKEDEX_ENABLED] ?: true
+    }
+
     suspend fun setLightModeEnabled(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[IS_LIGHT_MODE_ENABLED] = enabled
         }
     }
 
+    suspend fun setTypeQuizEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[IS_TYPE_QUIZ_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setPokedexEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[IS_POKEDEX_ENABLED] = enabled
+        }
+    }
+
     private companion object {
         val IS_LIGHT_MODE_ENABLED = booleanPreferencesKey("is_light_mode_enabled")
+        val IS_TYPE_QUIZ_ENABLED = booleanPreferencesKey("is_type_quiz_enabled")
+        val IS_POKEDEX_ENABLED = booleanPreferencesKey("is_pokedex_enabled")
     }
 }
