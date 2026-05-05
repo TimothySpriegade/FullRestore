@@ -79,6 +79,15 @@ private val FILTER_PANEL_PADDING = 14.dp
 private val FILTER_SPACING = 10.dp
 private val FILTER_CHIP_SPACING = 8.dp
 private val SPRITE_SIZE = 68.dp
+private val BOTTOM_LIST_SPACER_HEIGHT = 6.dp
+private val STAT_ROW_HORIZONTAL_SPACING = 16.dp
+private val STAT_LABEL_SPACING = 6.dp
+private val STAT_PILL_CORNER_RADIUS = 999.dp
+private val STAT_PILL_HORIZONTAL_PADDING = 12.dp
+private val STAT_PILL_VERTICAL_PADDING = 6.dp
+private val FILTER_PANEL_ELEVATION = 2.dp
+private val FILTER_CHIP_ELEVATION = 2.dp
+private val TYPE_BADGE_DOT_SIZE = 6.dp
 
 @Composable
 fun PokedexRoute(
@@ -243,7 +252,7 @@ fun PokedexScreen(
                             PokedexCard(entry = entry, stats = stats)
                         }
                         item {
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(BOTTOM_LIST_SPACER_HEIGHT))
                         }
                     }
                 }
@@ -311,7 +320,7 @@ private fun PokedexCard(entry: PokemonEntity, stats: Map<String, Int>) {
             Column(verticalArrangement = Arrangement.spacedBy(STATS_ROW_SPACING)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(STAT_ROW_HORIZONTAL_SPACING)
                 ) {
                     StatRow(
                         label = "HP",
@@ -331,7 +340,7 @@ private fun PokedexCard(entry: PokemonEntity, stats: Map<String, Int>) {
                 }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.spacedBy(STAT_ROW_HORIZONTAL_SPACING)
                 ) {
                     StatRow(
                         label = "SpA",
@@ -366,7 +375,7 @@ private fun StatRow(label: String, value: Int, modifier: Modifier = Modifier) {
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.primary)
         )
-        Spacer(modifier = Modifier.width(6.dp))
+        Spacer(modifier = Modifier.width(STAT_LABEL_SPACING))
         Text(
             label,
             style = MaterialTheme.typography.labelMedium,
@@ -386,9 +395,12 @@ private fun StatRow(label: String, value: Int, modifier: Modifier = Modifier) {
 private fun StatPill(label: String, value: Int) {
     Row(
         modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
+            .clip(RoundedCornerShape(STAT_PILL_CORNER_RADIUS))
             .background(MaterialTheme.colorScheme.primaryContainer)
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(
+                horizontal = STAT_PILL_HORIZONTAL_PADDING,
+                vertical = STAT_PILL_VERTICAL_PADDING
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -396,7 +408,7 @@ private fun StatPill(label: String, value: Int) {
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onPrimaryContainer
         )
-        Spacer(modifier = Modifier.width(6.dp))
+        Spacer(modifier = Modifier.width(STAT_LABEL_SPACING))
         Text(
             value.toString(),
             style = MaterialTheme.typography.labelLarge,
@@ -427,7 +439,7 @@ private fun FilterPanel(
     Surface(
         shape = RoundedCornerShape(FILTER_PANEL_CORNER_RADIUS),
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 2.dp
+        tonalElevation = FILTER_PANEL_ELEVATION
     ) {
         Column(
             modifier = Modifier
@@ -603,7 +615,7 @@ private fun FilterChip(
     val backgroundColor = if (selected) {
         MaterialTheme.colorScheme.primaryContainer
     } else {
-        MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+        MaterialTheme.colorScheme.surfaceColorAtElevation(FILTER_CHIP_ELEVATION)
     }
     val contentColor = if (selected) {
         MaterialTheme.colorScheme.onPrimaryContainer
@@ -611,23 +623,26 @@ private fun FilterChip(
         MaterialTheme.colorScheme.onSurfaceVariant
     }
     Surface(
-        shape = RoundedCornerShape(999.dp),
+        shape = RoundedCornerShape(STAT_PILL_CORNER_RADIUS),
         color = backgroundColor,
         contentColor = contentColor,
         onClick = onClick
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            modifier = Modifier.padding(
+                horizontal = STAT_PILL_HORIZONTAL_PADDING,
+                vertical = STAT_PILL_VERTICAL_PADDING
+            ),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (selected) {
                 Box(
                     modifier = Modifier
-                        .size(6.dp)
+                        .size(TYPE_BADGE_DOT_SIZE)
                         .clip(CircleShape)
                         .background(VgcLeaf)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(STAT_LABEL_SPACING))
             }
             Text(label, style = MaterialTheme.typography.labelLarge)
         }

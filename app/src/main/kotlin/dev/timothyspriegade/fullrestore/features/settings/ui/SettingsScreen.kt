@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ViewList
+import androidx.compose.material.icons.rounded.Analytics
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.School
 import androidx.compose.material3.Card
@@ -54,6 +55,7 @@ private val BADGE_SIZE = 40.dp
 private val BADGE_ICON_SIZE = 20.dp
 private val SECTION_HEADER_SPACING = 4.dp
 private const val BADGE_ALPHA = 0.18f
+private val FOOTER_SPACER_HEIGHT = 4.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,6 +66,8 @@ fun SettingsScreen(
     onTypeQuizToggle: (Boolean) -> Unit,
     isPokedexEnabled: Boolean,
     onPokedexToggle: (Boolean) -> Unit,
+    isTeamCoverageEnabled: Boolean,
+    onTeamCoverageToggle: (Boolean) -> Unit,
     navItems: List<AppNavItem>
 ) {
     val gradient = Brush.verticalGradient(
@@ -148,7 +152,16 @@ fun SettingsScreen(
                     iconTint = VgcLeaf,
                     onToggle = onPokedexToggle
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                SettingsToggleCard(
+                    title = "Team coverage",
+                    description = if (isTeamCoverageEnabled) "Visible in navigation" else "Hidden from navigation",
+                    enabled = isTeamCoverageEnabled,
+                    icon = Icons.Rounded.Analytics,
+                    badgeColor = VgcAmber,
+                    iconTint = VgcAmber,
+                    onToggle = onTeamCoverageToggle
+                )
+                Spacer(modifier = Modifier.height(FOOTER_SPACER_HEIGHT))
             }
         }
     }

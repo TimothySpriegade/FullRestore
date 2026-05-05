@@ -25,6 +25,7 @@ so I thought of this little toolbox for VGC Pokémon.
 - Settings tab where each feature is taggable for further customizability
 - Light mode toggle persists across restarts using DataStore preferences.
 - Custom Material 3 color system and type badges for clear visual cues.
+- Team coverage tool to analyze strengths and weaknesses for 6 type-only picks, including weakness stacking analysis.
 
 ## Tech Stack
 - Kotlin + Jetpack Compose
@@ -68,6 +69,12 @@ so I thought of this little toolbox for VGC Pokémon.
 - Search by name, Pokedex number, or type.
 - Use filters for type, tags (Legendary/Mythical/Baby), and minimum base stat total.
 - Each entry shows its sprite, types, and base stats.
+
+## Team Coverage
+
+- Enter up to six Pokemon by type only (primary + optional secondary).
+- Get offensive coverage (best hit) and defensive profile (worst weakness).
+- **Weakness Stacking:** Analyze how many team members are vulnerable to specific types to identify critical core flaws.
 
 ## Project Structure
 ```

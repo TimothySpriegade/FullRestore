@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ViewList
+import androidx.compose.material.icons.rounded.Analytics
 import androidx.compose.material.icons.rounded.School
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
@@ -26,6 +27,7 @@ import dev.timothyspriegade.fullrestore.core.designsystem.FullRestoreTheme
 import dev.timothyspriegade.fullrestore.features.pokedex.ui.PokedexRoute
 import dev.timothyspriegade.fullrestore.features.settings.data.UserSettingsStore
 import dev.timothyspriegade.fullrestore.features.settings.ui.SettingsScreen
+import dev.timothyspriegade.fullrestore.features.teamcoverage.ui.TeamCoverageRoute
 import dev.timothyspriegade.fullrestore.features.typequiz.ui.TypeQuizRoute
 import kotlinx.coroutines.launch
 
@@ -39,13 +41,15 @@ class MainActivity : ComponentActivity() {
             val isLightModeEnabled by settingsStore.isLightModeEnabled.collectAsState(initial = false)
             val isTypeQuizEnabled by settingsStore.isTypeQuizEnabled.collectAsState(initial = true)
             val isPokedexEnabled by settingsStore.isPokedexEnabled.collectAsState(initial = true)
+            val isTeamCoverageEnabled by settingsStore.isTeamCoverageEnabled.collectAsState(initial = true)
             var selectedTab by rememberSaveable { mutableStateOf(AppTab.TYPE_QUIZ) }
             val scope = rememberCoroutineScope()
 
-            LaunchedEffect(isTypeQuizEnabled, isPokedexEnabled) {
+            LaunchedEffect(isTypeQuizEnabled, isPokedexEnabled, isTeamCoverageEnabled) {
                 val availableTabs = listOfNotNull(
                     if (isTypeQuizEnabled) AppTab.TYPE_QUIZ else null,
                     if (isPokedexEnabled) AppTab.POKEDEX else null,
+                    if (isTeamCoverageEnabled) AppTab.TEAM_COVERAGE else null,
                     AppTab.SETTINGS
                 )
                 if (selectedTab !in availableTabs) {
@@ -85,6 +89,21 @@ class MainActivity : ComponentActivity() {
                             )
                         )
                     }
+                    if (isTeamCoverageEnabled) {
+                        add(
+                            AppNavItem(
+                                label = "Team",
+                                selected = selectedTab == AppTab.TEAM_COVERAGE,
+                                onClick = { selectedTab = AppTab.TEAM_COVERAGE },
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Analytics,
+                                        contentDescription = "Team coverage"
+                                    )
+                                }
+                            )
+                        )
+                    }
                     add(
                         AppNavItem(
                             label = "Settings",
@@ -104,6 +123,7 @@ class MainActivity : ComponentActivity() {
                     when (selectedTab) {
                         AppTab.TYPE_QUIZ -> TypeQuizRoute(navItems = navItems)
                         AppTab.POKEDEX -> PokedexRoute(navItems = navItems)
+                        AppTab.TEAM_COVERAGE -> TeamCoverageRoute(navItems = navItems)
                         AppTab.SETTINGS -> SettingsScreen(
                             isLightModeEnabled = isLightModeEnabled,
                             onLightModeToggle = { enabled ->
@@ -117,6 +137,10 @@ class MainActivity : ComponentActivity() {
                             onPokedexToggle = { enabled ->
                                 scope.launch { settingsStore.setPokedexEnabled(enabled) }
                             },
+                            isTeamCoverageEnabled = isTeamCoverageEnabled,
+                            onTeamCoverageToggle = { enabled ->
+                                scope.launch { settingsStore.setTeamCoverageEnabled(enabled) }
+                            },
                             navItems = navItems
                         )
                     }
@@ -129,5 +153,6 @@ class MainActivity : ComponentActivity() {
 private enum class AppTab {
     TYPE_QUIZ,
     POKEDEX,
+    TEAM_COVERAGE,
     SETTINGS
 }

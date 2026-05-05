@@ -29,6 +29,10 @@ class UserSettingsStore(private val context: Context) {
         preferences[IS_POKEDEX_ENABLED] ?: true
     }
 
+    val isTeamCoverageEnabled: Flow<Boolean> = dataStore.data.map { preferences ->
+        preferences[IS_TEAM_COVERAGE_ENABLED] ?: true
+    }
+
     suspend fun setLightModeEnabled(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[IS_LIGHT_MODE_ENABLED] = enabled
@@ -47,9 +51,16 @@ class UserSettingsStore(private val context: Context) {
         }
     }
 
+    suspend fun setTeamCoverageEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[IS_TEAM_COVERAGE_ENABLED] = enabled
+        }
+    }
+
     private companion object {
         val IS_LIGHT_MODE_ENABLED = booleanPreferencesKey("is_light_mode_enabled")
         val IS_TYPE_QUIZ_ENABLED = booleanPreferencesKey("is_type_quiz_enabled")
         val IS_POKEDEX_ENABLED = booleanPreferencesKey("is_pokedex_enabled")
+        val IS_TEAM_COVERAGE_ENABLED = booleanPreferencesKey("is_team_coverage_enabled")
     }
 }

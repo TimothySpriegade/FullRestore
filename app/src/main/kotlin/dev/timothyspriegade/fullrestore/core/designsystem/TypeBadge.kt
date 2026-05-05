@@ -10,6 +10,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.timothyspriegade.fullrestore.domain.model.PokemonType
 
+private val BADGE_CORNER_RADIUS = 999.dp
+private val BADGE_SHADOW_ELEVATION = 2.dp
+private val BADGE_HORIZONTAL_PADDING = 14.dp
+private val BADGE_VERTICAL_PADDING = 6.dp
+
 @Composable
 fun TypeBadge(type: PokemonType, modifier: Modifier = Modifier) {
     val colors = typeColorsFor(type)
@@ -17,12 +22,15 @@ fun TypeBadge(type: PokemonType, modifier: Modifier = Modifier) {
         modifier = modifier,
         color = colors.container,
         contentColor = colors.onContainer,
-        shape = RoundedCornerShape(999.dp),
-        shadowElevation = 2.dp
+        shape = RoundedCornerShape(BADGE_CORNER_RADIUS),
+        shadowElevation = BADGE_SHADOW_ELEVATION
     ) {
         Text(
             text = type.displayName.uppercase(),
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+            modifier = Modifier.padding(
+                horizontal = BADGE_HORIZONTAL_PADDING,
+                vertical = BADGE_VERTICAL_PADDING
+            ),
             style = VgcTypography.labelLarge,
             fontWeight = FontWeight.SemiBold
         )
