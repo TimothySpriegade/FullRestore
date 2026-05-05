@@ -41,6 +41,7 @@ import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -111,7 +112,7 @@ fun PokedexScreen(
     var showLegendaryOnly by remember { mutableStateOf(false) }
     var showMythicalOnly by remember { mutableStateOf(false) }
     var showBabyOnly by remember { mutableStateOf(false) }
-    var minBaseStatTotal by remember { mutableStateOf(0) }
+    var minBaseStatTotal by remember { mutableIntStateOf(0) }
     val filteredPokemon = pokemon.filter { entry ->
         if (query.isBlank()) return@filter true
         val normalized = query.lowercase()
@@ -259,60 +260,79 @@ private fun PokedexCard(entry: PokemonEntity) {
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                Column(horizontalAlignment = Alignment.End) {
-                    AsyncImage(
-                        model = entry.spriteUrl,
-                        contentDescription = "${entry.name} sprite",
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.size(SPRITE_SIZE)
-                    )
-                    if (entry.baseStatTotal > 0) {
-                        Spacer(modifier = Modifier.height(6.dp))
-                        StatPill(label = "BST", value = entry.baseStatTotal)
-                    }
-                }
+                AsyncImage(
+                    model = entry.spriteUrl,
+                    contentDescription = "${entry.name} sprite",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(SPRITE_SIZE)
+                )
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(TYPE_SPACING)) {
-                parseType(entry.type1)?.let { type ->
-                    TypeBadge(type = type)
-                }
-                entry.type2?.let { secondary ->
-                    parseType(secondary)?.let { type ->
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(TYPE_SPACING)) {
+                    parseType(entry.type1)?.let { type ->
                         TypeBadge(type = type)
                     }
+                    entry.type2?.let { secondary ->
+                        parseType(secondary)?.let { type ->
+                            TypeBadge(type = type)
+                        }
+                    }
+                }
+                if (entry.baseStatTotal > 0) {
+                    StatPill(label = "BST", value = entry.baseStatTotal)
                 }
             }
+
             Column(verticalArrangement = Arrangement.spacedBy(STATS_ROW_SPACING)) {
-                StatRow(label = "HP", value = entry.hp)
-                StatRow(label = "Attack", value = entry.attack)
-                StatRow(label = "Defense", value = entry.defense)
-                StatRow(label = "Sp. Atk", value = entry.spAttack)
-                StatRow(label = "Sp. Def", value = entry.spDefense)
-                StatRow(label = "Speed", value = entry.speed)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    StatRow(label = "HP", value = entry.hp, modifier = Modifier.weight(1f))
+                    StatRow(label = "Atk", value = entry.attack, modifier = Modifier.weight(1f))
+                    StatRow(label = "Def", value = entry.defense, modifier = Modifier.weight(1f))
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    StatRow(label = "SpA", value = entry.spAttack, modifier = Modifier.weight(1f))
+                    StatRow(label = "SpD", value = entry.spDefense, modifier = Modifier.weight(1f))
+                    StatRow(label = "Spe", value = entry.speed, modifier = Modifier.weight(1f))
+                }
             }
         }
     }
 }
 
 @Composable
-private fun StatRow(label: String, value: Int) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+private fun StatRow(label: String, value: Int, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         Box(
             modifier = Modifier
                 .size(STAT_BADGE_SIZE)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.primary)
         )
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(6.dp))
         Text(
             label,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(80.dp)
+            modifier = Modifier.weight(1f)
         )
         Text(
             value.toString(),
             style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
         )
     }
