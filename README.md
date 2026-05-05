@@ -62,6 +62,8 @@ app/src/main/kotlin/dev/timothyspriegade/fullrestore/
     common/          App constants
     designsystem/    Theme, colors, typography, shared UI components
     util/            Type chart logic
+  data/
+    local/           Room database, entities, and DAOs
   domain/
     model/           Domain models (types, effectiveness, quiz mode)
     usecase/         Quiz generation and effectiveness calculation
