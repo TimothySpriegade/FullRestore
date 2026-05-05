@@ -1,10 +1,14 @@
 # Full Restore
-> Full Restore is a Jetpack Compose Android app for practicing Pokemon type matchups. It delivers a fast, single-screen quiz loop with streak tracking, multiple quiz modes, and a settings tab with a persistent light mode toggle.
+
+Full Restore is a Jetpack Compose Android app for practicing Pokemon type matchups. It delivers a
+fast, single-screen quiz loop with streak tracking, multiple quiz modes, and a settings tab with a
+persistent light mode toggle.
 
 ## Highlights
 - Type effectiveness quiz with instant feedback and streak tracking.
 - Three quiz modes: single defender, dual defender, or random defenders.
 - Bottom navigation with a dedicated Settings tab.
+- Pokedex tab with searchable list, sprite images, and filters.
 - Light mode toggle persists across restarts using DataStore preferences.
 - Custom Material 3 color system and type badges for clear visual cues.
 
@@ -44,6 +48,13 @@
 - Enable Light mode to switch from the default Dark palette.
 - The setting is persisted via DataStore and restored on app launch.
 
+## Pokedex
+
+- Open the Pokedex tab to browse all Pokemon in the local database.
+- Search by name, Pokedex number, or type.
+- Use filters for type, tags (Legendary/Mythical/Baby), and minimum base stat total.
+- Each entry shows its sprite, types, and base stats.
+
 ## Project Structure
 ```
 app/src/main/kotlin/dev/timothyspriegade/fullrestore/
@@ -56,6 +67,7 @@ app/src/main/kotlin/dev/timothyspriegade/fullrestore/
     usecase/         Quiz generation and effectiveness calculation
   features/
     settings/        Settings UI + persistence
+    pokedex/         Pokedex UI + ViewModel
     typequiz/        Quiz UI + ViewModel
 ```
 

@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ViewList
 import androidx.compose.material.icons.rounded.School
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
@@ -21,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import dev.timothyspriegade.fullrestore.core.designsystem.AppNavItem
 import dev.timothyspriegade.fullrestore.core.designsystem.FullRestoreTheme
+import dev.timothyspriegade.fullrestore.features.pokedex.ui.PokedexRoute
 import dev.timothyspriegade.fullrestore.features.settings.data.UserSettingsStore
 import dev.timothyspriegade.fullrestore.features.settings.ui.SettingsScreen
 import dev.timothyspriegade.fullrestore.features.typequiz.ui.TypeQuizRoute
@@ -51,6 +53,17 @@ class MainActivity : ComponentActivity() {
                         }
                     ),
                     AppNavItem(
+                        label = "Pokedex",
+                        selected = selectedTab == AppTab.POKEDEX,
+                        onClick = { selectedTab = AppTab.POKEDEX },
+                        icon = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.ViewList,
+                                contentDescription = "Pokedex"
+                            )
+                        }
+                    ),
+                    AppNavItem(
                         label = "Settings",
                         selected = selectedTab == AppTab.SETTINGS,
                         onClick = { selectedTab = AppTab.SETTINGS },
@@ -66,6 +79,7 @@ class MainActivity : ComponentActivity() {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     when (selectedTab) {
                         AppTab.TYPE_QUIZ -> TypeQuizRoute(navItems = navItems)
+                        AppTab.POKEDEX -> PokedexRoute(navItems = navItems)
                         AppTab.SETTINGS -> SettingsScreen(
                             isLightModeEnabled = isLightModeEnabled,
                             onLightModeToggle = { enabled ->
@@ -82,5 +96,6 @@ class MainActivity : ComponentActivity() {
 
 private enum class AppTab {
     TYPE_QUIZ,
+    POKEDEX,
     SETTINGS
 }
