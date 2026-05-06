@@ -1,4 +1,4 @@
-# <img src="app/src/main/res/assets/Full Restore App Icon.png" width="40" height="40" align="center"> Full Restore
+# <img src="/assets/Full Restore App Icon.png" width="40" height="40" align="center"> Full Restore
 
 > Full Restore is a Jetpack Compose Android app for practicing Pokemon type matchups and is supposed
 > to work as a handy toobox for competetive players.
