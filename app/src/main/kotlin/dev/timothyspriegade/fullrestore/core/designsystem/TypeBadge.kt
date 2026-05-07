@@ -16,9 +16,15 @@ private val BADGE_HORIZONTAL_PADDING = 14.dp
 private val BADGE_VERTICAL_PADDING = 6.dp
 
 @Composable
-fun TypeBadge(type: PokemonType, modifier: Modifier = Modifier) {
+fun TypeBadge(
+    type: PokemonType,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
+) {
     val colors = typeColorsFor(type)
     Surface(
+        onClick = onClick ?: {},
+        enabled = onClick != null,
         modifier = modifier,
         color = colors.container,
         contentColor = colors.onContainer,
@@ -32,7 +38,9 @@ fun TypeBadge(type: PokemonType, modifier: Modifier = Modifier) {
                 vertical = BADGE_VERTICAL_PADDING
             ),
             style = VgcTypography.labelLarge,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            softWrap = false
         )
     }
 }

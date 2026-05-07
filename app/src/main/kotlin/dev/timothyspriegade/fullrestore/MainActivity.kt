@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ViewList
 import androidx.compose.material.icons.rounded.Analytics
 import androidx.compose.material.icons.rounded.School
+import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -40,14 +41,16 @@ class MainActivity : ComponentActivity() {
             val settingsStore = remember { UserSettingsStore(context.applicationContext) }
             val isLightModeEnabled by settingsStore.isLightModeEnabled.collectAsState(initial = false)
             val isTypeQuizEnabled by settingsStore.isTypeQuizEnabled.collectAsState(initial = true)
+            val isDefenseQuizEnabled by settingsStore.isDefenseQuizEnabled.collectAsState(initial = true)
             val isPokedexEnabled by settingsStore.isPokedexEnabled.collectAsState(initial = true)
             val isTeamCoverageEnabled by settingsStore.isTeamCoverageEnabled.collectAsState(initial = true)
             var selectedTab by rememberSaveable { mutableStateOf(AppTab.TYPE_QUIZ) }
             val scope = rememberCoroutineScope()
 
-            LaunchedEffect(isTypeQuizEnabled, isPokedexEnabled, isTeamCoverageEnabled) {
+            LaunchedEffect(isTypeQuizEnabled, isDefenseQuizEnabled, isPokedexEnabled, isTeamCoverageEnabled) {
                 val availableTabs = listOfNotNull(
                     if (isTypeQuizEnabled) AppTab.TYPE_QUIZ else null,
+                    if (isDefenseQuizEnabled) AppTab.DEFENSE_QUIZ else null,
                     if (isPokedexEnabled) AppTab.POKEDEX else null,
                     if (isTeamCoverageEnabled) AppTab.TEAM_COVERAGE else null,
                     AppTab.SETTINGS
@@ -69,6 +72,21 @@ class MainActivity : ComponentActivity() {
                                     Icon(
                                         imageVector = Icons.Rounded.School,
                                         contentDescription = "Type Quiz"
+                                    )
+                                }
+                            )
+                        )
+                    }
+                    if (isDefenseQuizEnabled) {
+                        add(
+                            AppNavItem(
+                                label = "Defense",
+                                selected = selectedTab == AppTab.DEFENSE_QUIZ,
+                                onClick = { selectedTab = AppTab.DEFENSE_QUIZ },
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Shield,
+                                        contentDescription = "Defense Quiz"
                                     )
                                 }
                             )
@@ -122,6 +140,7 @@ class MainActivity : ComponentActivity() {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     when (selectedTab) {
                         AppTab.TYPE_QUIZ -> TypeQuizRoute(navItems = navItems)
+                        AppTab.DEFENSE_QUIZ -> dev.timothyspriegade.fullrestore.features.defensequiz.ui.DefenseQuizRoute(navItems = navItems)
                         AppTab.POKEDEX -> PokedexRoute(navItems = navItems)
                         AppTab.TEAM_COVERAGE -> TeamCoverageRoute(navItems = navItems)
                         AppTab.SETTINGS -> SettingsScreen(
@@ -132,6 +151,10 @@ class MainActivity : ComponentActivity() {
                             isTypeQuizEnabled = isTypeQuizEnabled,
                             onTypeQuizToggle = { enabled ->
                                 scope.launch { settingsStore.setTypeQuizEnabled(enabled) }
+                            },
+                            isDefenseQuizEnabled = isDefenseQuizEnabled,
+                            onDefenseQuizToggle = { enabled ->
+                                scope.launch { settingsStore.setDefenseQuizEnabled(enabled) }
                             },
                             isPokedexEnabled = isPokedexEnabled,
                             onPokedexToggle = { enabled ->
@@ -152,6 +175,7 @@ class MainActivity : ComponentActivity() {
 
 private enum class AppTab {
     TYPE_QUIZ,
+    DEFENSE_QUIZ,
     POKEDEX,
     TEAM_COVERAGE,
     SETTINGS

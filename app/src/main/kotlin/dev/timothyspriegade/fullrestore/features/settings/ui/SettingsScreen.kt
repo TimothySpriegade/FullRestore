@@ -21,6 +21,7 @@ import androidx.compose.material.icons.automirrored.rounded.ViewList
 import androidx.compose.material.icons.rounded.Analytics
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.School
+import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -64,6 +65,8 @@ fun SettingsScreen(
     onLightModeToggle: (Boolean) -> Unit,
     isTypeQuizEnabled: Boolean,
     onTypeQuizToggle: (Boolean) -> Unit,
+    isDefenseQuizEnabled: Boolean,
+    onDefenseQuizToggle: (Boolean) -> Unit,
     isPokedexEnabled: Boolean,
     onPokedexToggle: (Boolean) -> Unit,
     isTeamCoverageEnabled: Boolean,
@@ -142,6 +145,15 @@ fun SettingsScreen(
                     badgeColor = VgcTeal,
                     iconTint = VgcTeal,
                     onToggle = onTypeQuizToggle
+                )
+                SettingsToggleCard(
+                    title = "Defense Quiz",
+                    description = if (isDefenseQuizEnabled) "Visible in navigation" else "Hidden from navigation",
+                    enabled = isDefenseQuizEnabled,
+                    icon = Icons.Rounded.Shield,
+                    badgeColor = dev.timothyspriegade.fullrestore.core.designsystem.VgcCoral,
+                    iconTint = dev.timothyspriegade.fullrestore.core.designsystem.VgcCoral,
+                    onToggle = onDefenseQuizToggle
                 )
                 SettingsToggleCard(
                     title = "Pokedex",
