@@ -47,17 +47,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.timothyspriegade.fullrestore.core.common.APP_TAGLINE
 import dev.timothyspriegade.fullrestore.core.designsystem.AppBottomNav
 import dev.timothyspriegade.fullrestore.core.designsystem.AppNavItem
+import dev.timothyspriegade.fullrestore.core.designsystem.BOTTOM_SPACER_HEIGHT
+import dev.timothyspriegade.fullrestore.core.designsystem.FullRestoreTheme
+import dev.timothyspriegade.fullrestore.core.designsystem.MAIN_CONTENT_SPACING
+import dev.timothyspriegade.fullrestore.core.designsystem.SCREEN_PADDING_HORIZONTAL
+import dev.timothyspriegade.fullrestore.core.designsystem.StreakBadge
 import dev.timothyspriegade.fullrestore.core.designsystem.TypeBadge
 import dev.timothyspriegade.fullrestore.core.designsystem.VgcCoral
 import dev.timothyspriegade.fullrestore.core.designsystem.VgcLeaf
@@ -67,10 +72,7 @@ import dev.timothyspriegade.fullrestore.domain.model.PokemonType
 import dev.timothyspriegade.fullrestore.features.defensequiz.viewmodel.DefenseQuizViewModel
 
 // Layout constants
-private val SCREEN_PADDING_HORIZONTAL = 16.dp
-private val MAIN_CONTENT_SPACING = 12.dp
 private val TOP_BAR_ACTION_SPACING = 16.dp
-private val BOTTOM_SPACER_HEIGHT = 24.dp
 
 // Sticky Header constants
 private val STICKY_HEADER_MAX_HEIGHT = 110.dp
@@ -89,14 +91,6 @@ private const val BUCKET_SURFACE_ALPHA = 0.7f
 private const val MISSING_TYPE_ALPHA = 0.5f
 private const val EMPTY_STATE_ALPHA = 0.5f
 private const val HINT_TEXT_ALPHA = 0.7f
-
-// Streak Badge constants
-private val STREAK_BADGE_CORNER_RADIUS = 999.dp
-private const val STREAK_BADGE_ALPHA = 0.14f
-private val STREAK_BADGE_HORIZONTAL_PADDING = 12.dp
-private val STREAK_BADGE_VERTICAL_PADDING = 6.dp
-private val STREAK_BADGE_DOT_SIZE = 8.dp
-private val STREAK_BADGE_SPACING = 8.dp
 
 // Badge & Icon constants
 private val BADGE_WIDTH = 100.dp
@@ -554,30 +548,27 @@ private fun SelectableTypeBadge(
     }
 }
 
+@Preview(showBackground = true)
 @Composable
-private fun StreakBadge(streak: Int) {
-    val color = if (streak >= 3) VgcLeaf else VgcTeal
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(STREAK_BADGE_CORNER_RADIUS))
-            .background(color.copy(alpha = STREAK_BADGE_ALPHA))
-            .padding(
-                horizontal = STREAK_BADGE_HORIZONTAL_PADDING,
-                vertical = STREAK_BADGE_VERTICAL_PADDING
-            ),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(STREAK_BADGE_DOT_SIZE)
-                .clip(CircleShape)
-                .background(color)
-        )
-        Spacer(modifier = Modifier.width(STREAK_BADGE_SPACING))
-        Text(
-            text = "Streak $streak",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface
+private fun DefenseQuizScreenPreview() {
+    FullRestoreTheme(darkTheme = false) {
+        DefenseQuizScreen(
+            defenderPrimary = PokemonType.FIRE,
+            defenderSecondary = PokemonType.FLYING,
+            assignments = PokemonType.entries.associateWith { null },
+            correctAssignments = null,
+            validationResults = null,
+            isSubmitted = false,
+            streak = 5,
+            selectedType = null,
+            onTypeSelect = {},
+            onBucketClick = {},
+            onFillRemaining = {},
+            onSubmit = {},
+            onNext = {},
+            navItems = emptyList()
         )
     }
 }
+
+

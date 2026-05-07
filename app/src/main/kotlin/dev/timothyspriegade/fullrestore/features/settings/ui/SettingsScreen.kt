@@ -39,15 +39,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dev.timothyspriegade.fullrestore.core.designsystem.AppBottomNav
 import dev.timothyspriegade.fullrestore.core.designsystem.AppNavItem
+import dev.timothyspriegade.fullrestore.core.designsystem.FullRestoreTheme
+import dev.timothyspriegade.fullrestore.core.designsystem.SCREEN_PADDING_HORIZONTAL
+import dev.timothyspriegade.fullrestore.core.designsystem.SCREEN_PADDING_VERTICAL
 import dev.timothyspriegade.fullrestore.core.designsystem.VgcAmber
+import dev.timothyspriegade.fullrestore.core.designsystem.VgcCoral
 import dev.timothyspriegade.fullrestore.core.designsystem.VgcLeaf
 import dev.timothyspriegade.fullrestore.core.designsystem.VgcTeal
 
-private val SCREEN_PADDING_HORIZONTAL = 16.dp
-private val SCREEN_PADDING_VERTICAL = 12.dp
 private val SECTION_SPACING = 12.dp
 private val CARD_CORNER_RADIUS = 24.dp
 private val CARD_PADDING = 16.dp
@@ -151,8 +154,8 @@ fun SettingsScreen(
                     description = if (isDefenseQuizEnabled) "Visible in navigation" else "Hidden from navigation",
                     enabled = isDefenseQuizEnabled,
                     icon = Icons.Rounded.Shield,
-                    badgeColor = dev.timothyspriegade.fullrestore.core.designsystem.VgcCoral,
-                    iconTint = dev.timothyspriegade.fullrestore.core.designsystem.VgcCoral,
+                    badgeColor = VgcCoral,
+                    iconTint = VgcCoral,
                     onToggle = onDefenseQuizToggle
                 )
                 SettingsToggleCard(
@@ -251,3 +254,25 @@ private fun SettingsToggleCard(
         }
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+private fun SettingsScreenPreview() {
+    FullRestoreTheme(darkTheme = false) {
+        SettingsScreen(
+            isLightModeEnabled = false,
+            onLightModeToggle = {},
+            isTypeQuizEnabled = true,
+            onTypeQuizToggle = {},
+            isDefenseQuizEnabled = true,
+            onDefenseQuizToggle = {},
+            isPokedexEnabled = true,
+            onPokedexToggle = {},
+            isTeamCoverageEnabled = true,
+            onTeamCoverageToggle = {},
+            navItems = emptyList()
+        )
+    }
+}
+
+

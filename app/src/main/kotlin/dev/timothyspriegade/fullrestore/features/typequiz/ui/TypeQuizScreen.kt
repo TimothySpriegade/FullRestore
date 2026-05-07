@@ -18,8 +18,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,20 +36,27 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.timothyspriegade.fullrestore.core.common.APP_TAGLINE
 import dev.timothyspriegade.fullrestore.core.designsystem.AppBottomNav
 import dev.timothyspriegade.fullrestore.core.designsystem.AppNavItem
+import dev.timothyspriegade.fullrestore.core.designsystem.BOTTOM_SPACER_HEIGHT
+import dev.timothyspriegade.fullrestore.core.designsystem.FullRestoreTheme
+import dev.timothyspriegade.fullrestore.core.designsystem.MAIN_CONTENT_SPACING
+import dev.timothyspriegade.fullrestore.core.designsystem.SCREEN_PADDING_HORIZONTAL
+import dev.timothyspriegade.fullrestore.core.designsystem.SCREEN_PADDING_VERTICAL
+import dev.timothyspriegade.fullrestore.core.designsystem.StreakBadge
 import dev.timothyspriegade.fullrestore.core.designsystem.TypeBadge
 import dev.timothyspriegade.fullrestore.core.designsystem.VgcCoral
 import dev.timothyspriegade.fullrestore.core.designsystem.VgcLeaf
@@ -65,24 +72,12 @@ const val NEXT_QUEST_DELAY_IN_MILLIS = 1000L
 private const val ANIMATION_DURATION_MS = 300
 
 // Layout constants
-private val SCREEN_PADDING_HORIZONTAL = 16.dp
-private val SCREEN_PADDING_VERTICAL = 0.dp
-private val MAIN_CONTENT_SPACING = 10.dp
-private val BOTTOM_SPACER_HEIGHT = 2.dp
 private val TOP_BAR_ACTION_SPACING = 12.dp
 
 // Card constants
 private val CARD_CORNER_RADIUS_LARGE = 28.dp
 private val CARD_CORNER_RADIUS_MEDIUM = 24.dp
 private val CARD_CONTENT_PADDING = 16.dp
-
-// Streak Badge constants
-private val STREAK_BADGE_CORNER_RADIUS = 999.dp
-private const val STREAK_BADGE_ALPHA = 0.14f
-private val STREAK_BADGE_HORIZONTAL_PADDING = 12.dp
-private val STREAK_BADGE_VERTICAL_PADDING = 6.dp
-private val STREAK_BADGE_DOT_SIZE = 8.dp
-private val STREAK_BADGE_SPACING = 8.dp
 
 // Mode Selector constants
 private val MODE_SELECTOR_PADDING = 14.dp
@@ -199,7 +194,10 @@ fun TypeQuizScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = SCREEN_PADDING_HORIZONTAL, vertical = SCREEN_PADDING_VERTICAL)
+                    .padding(
+                        horizontal = SCREEN_PADDING_HORIZONTAL,
+                        vertical = SCREEN_PADDING_VERTICAL
+                    )
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(MAIN_CONTENT_SPACING)
             ) {
@@ -218,106 +216,6 @@ fun TypeQuizScreen(
                 )
                 ModeSelector(mode = mode, onModeChange = onModeChange)
                 Spacer(modifier = Modifier.height(BOTTOM_SPACER_HEIGHT))
-            }
-        }
-    }
-}
-
-@Composable
-private fun StreakBadge(streak: Int) {
-    val color = if (streak >= 3) VgcLeaf else VgcTeal
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(STREAK_BADGE_CORNER_RADIUS))
-            .background(color.copy(alpha = STREAK_BADGE_ALPHA))
-            .padding(horizontal = STREAK_BADGE_HORIZONTAL_PADDING, vertical = STREAK_BADGE_VERTICAL_PADDING),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(STREAK_BADGE_DOT_SIZE)
-                .clip(CircleShape)
-                .background(color)
-        )
-        Spacer(modifier = Modifier.width(STREAK_BADGE_SPACING))
-        Text(
-            text = "Streak $streak",
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
-
-@Composable
-private fun ModeSelector(mode: QuizMode, onModeChange: (QuizMode) -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(CARD_CORNER_RADIUS_MEDIUM),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Column(
-            modifier = Modifier.padding(MODE_SELECTOR_PADDING),
-            verticalArrangement = Arrangement.spacedBy(MODE_SELECTOR_SPACING)
-        ) {
-            Text(
-                "Training mode",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            ModeOption(
-                title = "Single defender",
-                subtitle = "1 attacker vs 1 type",
-                selected = mode == QuizMode.SINGLE_TYPE,
-                onClick = { onModeChange(QuizMode.SINGLE_TYPE) }
-            )
-            ModeOption(
-                title = "Dual defender",
-                subtitle = "1 attacker vs 2 types",
-                selected = mode == QuizMode.DUAL_TYPE,
-                onClick = { onModeChange(QuizMode.DUAL_TYPE) }
-            )
-            ModeOption(
-                title = "Random defenders",
-                subtitle = "1 or 2 types each question",
-                selected = mode == QuizMode.RANDOM_DEFENDERS,
-                onClick = { onModeChange(QuizMode.RANDOM_DEFENDERS) }
-            )
-        }
-    }
-}
-
-@Composable
-private fun ModeOption(
-    title: String,
-    subtitle: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    val container = if (selected) {
-        MaterialTheme.colorScheme.primaryContainer
-    } else {
-        MaterialTheme.colorScheme.surfaceColorAtElevation(MODE_OPTION_ELEVATION)
-    }
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .animateContentSize(),
-        colors = CardDefaults.cardColors(containerColor = container),
-        onClick = onClick
-    ) {
-        Row(
-            modifier = Modifier.padding(MODE_OPTION_PADDING),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            RadioButton(selected = selected, onClick = onClick)
-            Spacer(modifier = Modifier.width(MODE_OPTION_SPACING))
-            Column {
-                Text(title, style = MaterialTheme.typography.titleMedium)
-                Text(
-                    subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
     }
@@ -412,7 +310,10 @@ private fun AnswerCard(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = ANSWER_OPTION_HORIZONTAL_PADDING, vertical = ANSWER_OPTION_VERTICAL_PADDING),
+                            .padding(
+                                horizontal = ANSWER_OPTION_HORIZONTAL_PADDING,
+                                vertical = ANSWER_OPTION_VERTICAL_PADDING
+                            ),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
@@ -462,5 +363,102 @@ private fun AnswerCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ModeSelector(mode: QuizMode, onModeChange: (QuizMode) -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(CARD_CORNER_RADIUS_MEDIUM),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier.padding(MODE_SELECTOR_PADDING),
+            verticalArrangement = Arrangement.spacedBy(MODE_SELECTOR_SPACING)
+        ) {
+            Text(
+                "Training mode",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            ModeOption(
+                title = "Single defender",
+                subtitle = "1 attacker vs 1 type",
+                selected = mode == QuizMode.SINGLE_TYPE,
+                onClick = { onModeChange(QuizMode.SINGLE_TYPE) }
+            )
+            ModeOption(
+                title = "Dual defender",
+                subtitle = "1 attacker vs 2 types",
+                selected = mode == QuizMode.DUAL_TYPE,
+                onClick = { onModeChange(QuizMode.DUAL_TYPE) }
+            )
+            ModeOption(
+                title = "Random defenders",
+                subtitle = "1 or 2 types each question",
+                selected = mode == QuizMode.RANDOM_DEFENDERS,
+                onClick = { onModeChange(QuizMode.RANDOM_DEFENDERS) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun ModeOption(
+    title: String,
+    subtitle: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    val container = if (selected) {
+        MaterialTheme.colorScheme.primaryContainer
+    } else {
+        MaterialTheme.colorScheme.surfaceColorAtElevation(MODE_OPTION_ELEVATION)
+    }
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .animateContentSize(),
+        colors = CardDefaults.cardColors(containerColor = container),
+        onClick = onClick
+    ) {
+        Row(
+            modifier = Modifier.padding(MODE_OPTION_PADDING),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            RadioButton(selected = selected, onClick = onClick)
+            Spacer(modifier = Modifier.width(MODE_OPTION_SPACING))
+            Column {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun TypeQuizScreenPreview() {
+    FullRestoreTheme(darkTheme = false) {
+        TypeQuizScreen(
+            mode = QuizMode.SINGLE_TYPE,
+            attacker = PokemonType.FIRE,
+            defenderPrimary = PokemonType.GRASS,
+            defenderSecondary = null,
+            selectedAnswer = null,
+            isCorrect = null,
+            correctAnswer = null,
+            streak = 10,
+            onModeChange = {},
+            onAnswer = {},
+            onNext = {},
+            showNextButton = false,
+            navItems = emptyList()
+        )
     }
 }

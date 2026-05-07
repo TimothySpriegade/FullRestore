@@ -60,6 +60,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.timothyspriegade.fullrestore.core.designsystem.AppBottomNav
 import dev.timothyspriegade.fullrestore.core.designsystem.AppNavItem
+import dev.timothyspriegade.fullrestore.core.designsystem.BOTTOM_SPACER_HEIGHT
+import dev.timothyspriegade.fullrestore.core.designsystem.FullRestoreTheme
+import dev.timothyspriegade.fullrestore.core.designsystem.SCREEN_PADDING_HORIZONTAL
+import dev.timothyspriegade.fullrestore.core.designsystem.SCREEN_PADDING_VERTICAL
 import dev.timothyspriegade.fullrestore.core.designsystem.TypeBadge
 import dev.timothyspriegade.fullrestore.core.designsystem.VgcCoral
 import dev.timothyspriegade.fullrestore.core.designsystem.VgcLeaf
@@ -69,10 +73,9 @@ import dev.timothyspriegade.fullrestore.domain.model.PokemonType
 import dev.timothyspriegade.fullrestore.domain.model.TeamCoverageResult
 import dev.timothyspriegade.fullrestore.domain.model.TeamTypeSlot
 import dev.timothyspriegade.fullrestore.features.teamcoverage.viewmodel.TeamCoverageViewModel
-import kotlin.random.Random
 
-private val SCREEN_PADDING_HORIZONTAL = 16.dp
-private val SCREEN_PADDING_VERTICAL = 0.dp
+private val Random = kotlin.random.Random
+
 private val SECTION_SPACING = 12.dp
 private val SLOT_SPACING = 12.dp
 private val SLOT_CARD_PADDING = 12.dp
@@ -84,7 +87,6 @@ private val TYPE_DROPDOWN_SPACING = 8.dp
 private val RESULT_ROW_SPACING = 12.dp
 private val RESULT_CHIP_SPACING = 8.dp
 private val RESULT_PANEL_SPACING = 10.dp
-private val BOTTOM_SPACER_HEIGHT = 6.dp
 private val LABEL_SPACING = 6.dp
 private val RESULT_LABEL_SPACING = 8.dp
 private val PILL_CORNER_RADIUS = 999.dp
@@ -327,33 +329,6 @@ private fun HeroCard(
 }
 
 @Composable
-private fun HeroStatRow(title: String, description: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(HERO_STAT_DOT_SIZE)
-                .background(
-                    MaterialTheme.colorScheme.primary,
-                    shape = CircleShape
-                )
-        )
-        Spacer(modifier = Modifier.width(HERO_STAT_SPACING))
-        Column {
-            Text(
-                title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
 private fun TeamInputCard(
     slots: List<TeamTypeSlot>,
     onSlotChange: (Int, PokemonType?, PokemonType?) -> Unit
@@ -388,6 +363,167 @@ private fun TeamInputCard(
                     }
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun CoveragePanel(
+    title: String,
+    subtitle: String,
+    result: Map<Effectiveness, List<PokemonType>>
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(GROUP_CARD_CORNER_RADIUS),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier.padding(GROUP_CARD_PADDING),
+            verticalArrangement = Arrangement.spacedBy(RESULT_PANEL_SPACING)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(GROUP_HEADER_SPACING)) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Effectiveness.ordered.forEach { bucket ->
+                val types = result[bucket].orEmpty()
+                CoverageRow(bucket = bucket, types = types)
+            }
+        }
+    }
+}
+
+@Composable
+private fun WeaknessSummaryPanel(
+    weaknessCounts: Map<PokemonType, Int>
+) {
+    if (weaknessCounts.isEmpty()) return
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(GROUP_CARD_CORNER_RADIUS),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier.padding(GROUP_CARD_PADDING),
+            verticalArrangement = Arrangement.spacedBy(RESULT_PANEL_SPACING)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(GROUP_HEADER_SPACING)) {
+                Text(
+                    "Weakness stacking",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    "Count of team members weak to each type",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            // Group by count of weaknesses
+            val counts = weaknessCounts.values.distinct().sortedDescending()
+            counts.forEach { count ->
+                val types =
+                    weaknessCounts.filter { it.value == count }.keys.sortedBy { it.displayName }
+                Column(verticalArrangement = Arrangement.spacedBy(RESULT_ROW_SPACING)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            shape = RoundedCornerShape(PILL_CORNER_RADIUS),
+                            color = VgcCoral.copy(alpha = 0.12f)
+                        ) {
+                            Text(
+                                "$count weak",
+                                modifier = Modifier.padding(
+                                    horizontal = RESULT_PILL_HORIZONTAL_PADDING,
+                                    vertical = RESULT_PILL_VERTICAL_PADDING
+                                ),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = VgcCoral,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                    FlowRowChips(types = types)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyStateCard() {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(GROUP_CARD_CORNER_RADIUS),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier.padding(GROUP_CARD_PADDING),
+            verticalArrangement = Arrangement.spacedBy(EMPTY_STATE_SPACING)
+        ) {
+            Surface(
+                shape = RoundedCornerShape(EMPTY_ICON_CORNER_RADIUS),
+                color = MaterialTheme.colorScheme.primary.copy(alpha = EMPTY_ICON_ALPHA)
+            ) {
+                Box(
+                    modifier = Modifier.size(EMPTY_ICON_CONTAINER),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.ExpandMore,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(EMPTY_ICON_SIZE)
+                    )
+                }
+            }
+            Text(
+                "Select at least one primary type",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                "Once you do, offensive and defensive coverage will appear here.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun HeroStatRow(title: String, description: String) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(HERO_STAT_DOT_SIZE)
+                .background(
+                    MaterialTheme.colorScheme.primary,
+                    shape = CircleShape
+                )
+        )
+        Spacer(modifier = Modifier.width(HERO_STAT_SPACING))
+        Column {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
@@ -450,6 +586,23 @@ private fun TeamSlotRow(
             if (slot.primary != null) {
                 SlotWeaknessAnalysis(slot = slot)
             }
+        }
+    }
+}
+
+@Composable
+private fun CoverageRow(bucket: Effectiveness, types: List<PokemonType>) {
+    val accent = when (bucket) {
+        Effectiveness.FOUR_X, Effectiveness.TWO_X -> VgcLeaf
+        Effectiveness.NEUTRAL -> VgcTeal
+        Effectiveness.HALF_X, Effectiveness.QUARTER_X, Effectiveness.IMMUNE -> VgcCoral
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(RESULT_ROW_SPACING)) {
+        CoverageHeader(bucket = bucket, count = types.size, accent = accent)
+        if (types.isNotEmpty()) {
+            FlowRowChips(types = types)
+        } else {
+            EmptyCoverageChips()
         }
     }
 }
@@ -533,6 +686,56 @@ private fun TypeSelector(
             onSelect = onSelect
         )
     }
+}
+
+@Composable
+private fun CoverageHeader(bucket: Effectiveness, count: Int, accent: Color) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Surface(
+            shape = RoundedCornerShape(PILL_CORNER_RADIUS),
+            color = accent.copy(alpha = 0.12f)
+        ) {
+            Text(
+                bucket.label,
+                modifier = Modifier.padding(
+                    horizontal = RESULT_PILL_HORIZONTAL_PADDING,
+                    vertical = RESULT_PILL_VERTICAL_PADDING
+                ),
+                style = MaterialTheme.typography.labelLarge,
+                color = accent,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        Spacer(modifier = Modifier.width(RESULT_LABEL_SPACING))
+        Text(
+            "$count types",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun FlowRowChips(types: List<PokemonType>) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(RESULT_CHIP_SPACING),
+        verticalArrangement = Arrangement.spacedBy(RESULT_CHIP_SPACING),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        types.forEach { type ->
+            TypeBadge(type = type)
+        }
+    }
+}
+
+@Composable
+private fun EmptyCoverageChips() {
+    Text(
+        "None",
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(vertical = LABEL_SPACING)
+    )
 }
 
 @Composable
@@ -653,211 +856,10 @@ private fun TypeMenuItem(
     )
 }
 
-@Composable
-private fun WeaknessSummaryPanel(
-    weaknessCounts: Map<PokemonType, Int>
-) {
-    if (weaknessCounts.isEmpty()) return
-
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(GROUP_CARD_CORNER_RADIUS),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Column(
-            modifier = Modifier.padding(GROUP_CARD_PADDING),
-            verticalArrangement = Arrangement.spacedBy(RESULT_PANEL_SPACING)
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(GROUP_HEADER_SPACING)) {
-                Text(
-                    "Weakness stacking",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    "Count of team members weak to each type",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            // Group by count of weaknesses
-            val counts = weaknessCounts.values.distinct().sortedDescending()
-            counts.forEach { count ->
-                val types =
-                    weaknessCounts.filter { it.value == count }.keys.sortedBy { it.displayName }
-                Column(verticalArrangement = Arrangement.spacedBy(RESULT_ROW_SPACING)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Surface(
-                            shape = RoundedCornerShape(PILL_CORNER_RADIUS),
-                            color = VgcCoral.copy(alpha = 0.12f)
-                        ) {
-                            Text(
-                                "$count weak",
-                                modifier = Modifier.padding(
-                                    horizontal = RESULT_PILL_HORIZONTAL_PADDING,
-                                    vertical = RESULT_PILL_VERTICAL_PADDING
-                                ),
-                                style = MaterialTheme.typography.labelLarge,
-                                color = VgcCoral,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                    FlowRowChips(types = types)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun CoveragePanel(
-    title: String,
-    subtitle: String,
-    result: Map<Effectiveness, List<PokemonType>>
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(GROUP_CARD_CORNER_RADIUS),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Column(
-            modifier = Modifier.padding(GROUP_CARD_PADDING),
-            verticalArrangement = Arrangement.spacedBy(RESULT_PANEL_SPACING)
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(GROUP_HEADER_SPACING)) {
-                Text(
-                    title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Effectiveness.ordered.forEach { bucket ->
-                val types = result[bucket].orEmpty()
-                CoverageRow(bucket = bucket, types = types)
-            }
-        }
-    }
-}
-
-@Composable
-private fun CoverageRow(bucket: Effectiveness, types: List<PokemonType>) {
-    val accent = when (bucket) {
-        Effectiveness.FOUR_X, Effectiveness.TWO_X -> VgcLeaf
-        Effectiveness.NEUTRAL -> VgcTeal
-        Effectiveness.HALF_X, Effectiveness.QUARTER_X, Effectiveness.IMMUNE -> VgcCoral
-    }
-    Column(verticalArrangement = Arrangement.spacedBy(RESULT_ROW_SPACING)) {
-        CoverageHeader(bucket = bucket, count = types.size, accent = accent)
-        if (types.isNotEmpty()) {
-            FlowRowChips(types = types)
-        } else {
-            EmptyCoverageChips()
-        }
-    }
-}
-
-@Composable
-private fun CoverageHeader(bucket: Effectiveness, count: Int, accent: Color) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Surface(
-            shape = RoundedCornerShape(PILL_CORNER_RADIUS),
-            color = accent.copy(alpha = 0.12f)
-        ) {
-            Text(
-                bucket.label,
-                modifier = Modifier.padding(
-                    horizontal = RESULT_PILL_HORIZONTAL_PADDING,
-                    vertical = RESULT_PILL_VERTICAL_PADDING
-                ),
-                style = MaterialTheme.typography.labelLarge,
-                color = accent,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-        Spacer(modifier = Modifier.width(RESULT_LABEL_SPACING))
-        Text(
-            "$count types",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-private fun EmptyCoverageChips() {
-    Text(
-        "None",
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(vertical = LABEL_SPACING)
-    )
-}
-
-@Composable
-private fun FlowRowChips(types: List<PokemonType>) {
-    FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(RESULT_CHIP_SPACING),
-        verticalArrangement = Arrangement.spacedBy(RESULT_CHIP_SPACING),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        types.forEach { type ->
-            TypeBadge(type = type)
-        }
-    }
-}
-
-@Composable
-private fun EmptyStateCard() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(GROUP_CARD_CORNER_RADIUS),
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Column(
-            modifier = Modifier.padding(GROUP_CARD_PADDING),
-            verticalArrangement = Arrangement.spacedBy(EMPTY_STATE_SPACING)
-        ) {
-            Surface(
-                shape = RoundedCornerShape(EMPTY_ICON_CORNER_RADIUS),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = EMPTY_ICON_ALPHA)
-            ) {
-                Box(
-                    modifier = Modifier.size(EMPTY_ICON_CONTAINER),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.ExpandMore,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(EMPTY_ICON_SIZE)
-                    )
-                }
-            }
-            Text(
-                "Select at least one primary type",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                "Once you do, offensive and defensive coverage will appear here.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
 @androidx.compose.ui.tooling.preview.Preview
 @Composable
 private fun TeamCoverageScreenPreview() {
-    MaterialTheme {
+    FullRestoreTheme(darkTheme = false) {
         TeamCoverageScreen(
             navItems = emptyList(),
             slots = listOf(

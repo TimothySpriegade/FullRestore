@@ -53,11 +53,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import dev.timothyspriegade.fullrestore.core.designsystem.AppBottomNav
 import dev.timothyspriegade.fullrestore.core.designsystem.AppNavItem
+import dev.timothyspriegade.fullrestore.core.designsystem.FullRestoreTheme
+import dev.timothyspriegade.fullrestore.core.designsystem.SCREEN_PADDING_HORIZONTAL
+import dev.timothyspriegade.fullrestore.core.designsystem.SCREEN_PADDING_VERTICAL
 import dev.timothyspriegade.fullrestore.core.designsystem.TypeBadge
 import dev.timothyspriegade.fullrestore.core.designsystem.VgcLeaf
 import dev.timothyspriegade.fullrestore.data.local.pokemon.PokemonEntity
@@ -65,8 +69,6 @@ import dev.timothyspriegade.fullrestore.domain.model.PokemonType
 import dev.timothyspriegade.fullrestore.domain.usecase.CalculatePokemonStatsUseCase
 import dev.timothyspriegade.fullrestore.features.pokedex.viewmodel.PokedexViewModel
 
-private val SCREEN_PADDING_HORIZONTAL = 16.dp
-private val SCREEN_PADDING_VERTICAL = 0.dp
 private val SECTION_SPACING = 12.dp
 private val CARD_CORNER_RADIUS = 24.dp
 private val CARD_PADDING = 16.dp
@@ -127,7 +129,7 @@ fun PokedexScreen(
     var showMythicalOnly by remember { mutableStateOf(false) }
     var showBabyOnly by remember { mutableStateOf(false) }
     var minBaseStatTotal by remember { mutableIntStateOf(0) }
-    val filteredPokemon = pokemon.filter { entry ->
+    val filteredPokemon = pokemon.asSequence().filter { entry ->
         if (query.isBlank()) return@filter true
         val normalized = query.lowercase()
         entry.name.lowercase().contains(normalized) ||
@@ -157,7 +159,7 @@ fun PokedexScreen(
                 isNatureActive = isNatureActive
             )
             entry to stats
-        }
+        }.toList()
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -258,162 +260,6 @@ fun PokedexScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun PokedexCard(entry: PokemonEntity, stats: Map<String, Int>) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(CARD_CORNER_RADIUS),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Column(
-            modifier = Modifier.padding(CARD_PADDING),
-            verticalArrangement = Arrangement.spacedBy(SECTION_SPACING)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        "#${entry.pokedexNumber}",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        entry.name,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-                AsyncImage(
-                    model = entry.spriteUrl,
-                    contentDescription = "${entry.name} sprite",
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.size(SPRITE_SIZE)
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(TYPE_SPACING)) {
-                    parseType(entry.type1)?.let { type ->
-                        TypeBadge(type = type)
-                    }
-                    entry.type2?.let { secondary ->
-                        parseType(secondary)?.let { type ->
-                            TypeBadge(type = type)
-                        }
-                    }
-                }
-                if (entry.baseStatTotal > 0) {
-                    StatPill(label = "BST", value = entry.baseStatTotal)
-                }
-            }
-
-            Column(verticalArrangement = Arrangement.spacedBy(STATS_ROW_SPACING)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(STAT_ROW_HORIZONTAL_SPACING)
-                ) {
-                    StatRow(
-                        label = "HP",
-                        value = stats["hp"] ?: entry.hp,
-                        modifier = Modifier.weight(1f)
-                    )
-                    StatRow(
-                        label = "Atk",
-                        value = stats["attack"] ?: entry.attack,
-                        modifier = Modifier.weight(1f)
-                    )
-                    StatRow(
-                        label = "Def",
-                        value = stats["defense"] ?: entry.defense,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(STAT_ROW_HORIZONTAL_SPACING)
-                ) {
-                    StatRow(
-                        label = "SpA",
-                        value = stats["spAttack"] ?: entry.spAttack,
-                        modifier = Modifier.weight(1f)
-                    )
-                    StatRow(
-                        label = "SpD",
-                        value = stats["spDefense"] ?: entry.spDefense,
-                        modifier = Modifier.weight(1f)
-                    )
-                    StatRow(
-                        label = "Spe",
-                        value = stats["speed"] ?: entry.speed,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun StatRow(label: String, value: Int, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(STAT_BADGE_SIZE)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary)
-        )
-        Spacer(modifier = Modifier.width(STAT_LABEL_SPACING))
-        Text(
-            label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f)
-        )
-        Text(
-            value.toString(),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-    }
-}
-
-@Composable
-private fun StatPill(label: String, value: Int) {
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(STAT_PILL_CORNER_RADIUS))
-            .background(MaterialTheme.colorScheme.primaryContainer)
-            .padding(
-                horizontal = STAT_PILL_HORIZONTAL_PADDING,
-                vertical = STAT_PILL_VERTICAL_PADDING
-            ),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            label,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onPrimaryContainer
-        )
-        Spacer(modifier = Modifier.width(STAT_LABEL_SPACING))
-        Text(
-            value.toString(),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onPrimaryContainer
-        )
     }
 }
 
@@ -524,6 +370,108 @@ private fun FilterPanel(
 }
 
 @Composable
+private fun PokedexCard(entry: PokemonEntity, stats: Map<String, Int>) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(CARD_CORNER_RADIUS),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(
+            modifier = Modifier.padding(CARD_PADDING),
+            verticalArrangement = Arrangement.spacedBy(SECTION_SPACING)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "#${entry.pokedexNumber}",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        entry.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                AsyncImage(
+                    model = entry.spriteUrl,
+                    contentDescription = "${entry.name} sprite",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(SPRITE_SIZE)
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(TYPE_SPACING)) {
+                    parseType(entry.type1)?.let { type ->
+                        TypeBadge(type = type)
+                    }
+                    entry.type2?.let { secondary ->
+                        parseType(secondary)?.let { type ->
+                            TypeBadge(type = type)
+                        }
+                    }
+                }
+                if (entry.baseStatTotal > 0) {
+                    StatPill(label = "BST", value = entry.baseStatTotal)
+                }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(STATS_ROW_SPACING)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(STAT_ROW_HORIZONTAL_SPACING)
+                ) {
+                    StatRow(
+                        label = "HP",
+                        value = stats["hp"] ?: entry.hp,
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatRow(
+                        label = "Atk",
+                        value = stats["attack"] ?: entry.attack,
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatRow(
+                        label = "Def",
+                        value = stats["defense"] ?: entry.defense,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(STAT_ROW_HORIZONTAL_SPACING)
+                ) {
+                    StatRow(
+                        label = "SpA",
+                        value = stats["spAttack"] ?: entry.spAttack,
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatRow(
+                        label = "SpD",
+                        value = stats["spDefense"] ?: entry.spDefense,
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatRow(
+                        label = "Spe",
+                        value = stats["speed"] ?: entry.speed,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun TypeFilterRow(
     selectedType: PokemonType?,
     onTypeSelected: (PokemonType?) -> Unit
@@ -607,6 +555,60 @@ private fun TypeFilterRow(
 }
 
 @Composable
+private fun StatRow(label: String, value: Int, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(STAT_BADGE_SIZE)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary)
+        )
+        Spacer(modifier = Modifier.width(STAT_LABEL_SPACING))
+        Text(
+            label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            value.toString(),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+    }
+}
+
+@Composable
+private fun StatPill(label: String, value: Int) {
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(STAT_PILL_CORNER_RADIUS))
+            .background(MaterialTheme.colorScheme.primaryContainer)
+            .padding(
+                horizontal = STAT_PILL_HORIZONTAL_PADDING,
+                vertical = STAT_PILL_VERTICAL_PADDING
+            ),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            label,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+        Spacer(modifier = Modifier.width(STAT_LABEL_SPACING))
+        Text(
+            value.toString(),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+    }
+}
+
+@Composable
 private fun FilterChip(
     label: String,
     selected: Boolean,
@@ -651,4 +653,84 @@ private fun FilterChip(
 
 private fun parseType(raw: String): PokemonType? {
     return PokemonType.entries.firstOrNull { it.displayName.equals(raw, ignoreCase = true) }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PokedexScreenPreview() {
+    FullRestoreTheme(darkTheme = false) {
+        PokedexScreen(
+            navItems = emptyList(),
+            pokemon = listOf(
+                PokemonEntity(
+                    pokedexNumber = 1,
+                    name = "Bulbasaur",
+                    type1 = "Grass",
+                    type2 = "Poison",
+                    hp = 45,
+                    attack = 49,
+                    defense = 49,
+                    spAttack = 65,
+                    spDefense = 65,
+                    speed = 45,
+                    baseStatTotal = 318,
+                    heightM = 0.7,
+                    weightKg = 6.9,
+                    baseExperience = 64,
+                    abilities = "Overgrow",
+                    hiddenAbility = "Chlorophyll",
+                    generation = "1",
+                    isLegendary = false,
+                    isMythical = false,
+                    isBaby = false,
+                    color = "Green",
+                    shape = "Quadruped",
+                    eggGroups = "Monster, Grass",
+                    habitat = "Grassland",
+                    growthRate = "Medium Slow",
+                    captureRate = 45,
+                    baseHappiness = 70,
+                    genus = "Seed Pokémon",
+                    evolutionChainId = 1,
+                    flavorText = "A strange seed was planted on its back at birth.",
+                    spriteUrl = null
+                ),
+                PokemonEntity(
+                    pokedexNumber = 4,
+                    name = "Charmander",
+                    type1 = "Fire",
+                    type2 = null,
+                    hp = 39,
+                    attack = 52,
+                    defense = 43,
+                    spAttack = 60,
+                    spDefense = 50,
+                    speed = 65,
+                    baseStatTotal = 309,
+                    heightM = 0.6,
+                    weightKg = 8.5,
+                    baseExperience = 62,
+                    abilities = "Blaze",
+                    hiddenAbility = "Solar Power",
+                    generation = "1",
+                    isLegendary = false,
+                    isMythical = false,
+                    isBaby = false,
+                    color = "Red",
+                    shape = "Bipedal",
+                    eggGroups = "Monster, Dragon",
+                    habitat = "Mountain",
+                    growthRate = "Medium Slow",
+                    captureRate = 45,
+                    baseHappiness = 70,
+                    genus = "Lizard Pokémon",
+                    evolutionChainId = 2,
+                    flavorText = "From the time it is born, a flame burns at the tip of its tail.",
+                    spriteUrl = null
+                )
+            ),
+            isLoading = false,
+            calculatePokemonStatsUseCase = CalculatePokemonStatsUseCase()
+        )
+    }
 }
