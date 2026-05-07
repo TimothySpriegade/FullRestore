@@ -90,14 +90,7 @@ class DefenseQuizViewModel(
 
     fun nextQuestion() {
         val (rawPrimary, rawSecondary) = generateQuestionUseCase.execute()
-        
-        // Normalize: Ensure if only one type exists, it is always the primary one.
-        // This prevents cases where only a secondary type might be present.
-        val (primary, secondary) = if (rawPrimary == null && rawSecondary != null) {
-            rawSecondary to null
-        } else {
-            rawPrimary to rawSecondary
-        }
+        val (primary, secondary) = rawPrimary to rawSecondary
 
         _state.update {
             it.copy(

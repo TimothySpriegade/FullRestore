@@ -2,7 +2,9 @@
 
 package dev.timothyspriegade.fullrestore.features.defensequiz.ui
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -13,12 +15,13 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -47,6 +50,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -67,13 +72,22 @@ private val MAIN_CONTENT_SPACING = 12.dp
 private val TOP_BAR_ACTION_SPACING = 16.dp
 private val BOTTOM_SPACER_HEIGHT = 24.dp
 
+// Sticky Header constants
+private val STICKY_HEADER_MAX_HEIGHT = 110.dp
+private val STICKY_HEADER_MIN_HEIGHT = 50.dp
+private const val STICKY_HEADER_ALPHA_THRESHOLD = 2.5f
+private val STICKY_HEADER_ELEVATION = 8.dp
+private val STICKY_HEADER_HORIZONTAL_PADDING = 24.dp
+
 // Card constants
 private val CARD_CORNER_RADIUS_LARGE = 24.dp
-private val CARD_CORNER_RADIUS_MEDIUM = 16.dp
-private val CARD_CONTENT_PADDING = 16.dp
 private val BUCKET_CONTENT_PADDING = 12.dp
 private val BUCKET_SPACING = 8.dp
-private val SECTION_SPACING = 12.dp
+private const val BUCKET_HIGHLIGHT_ALPHA = 0.3f
+private const val BUCKET_SURFACE_ALPHA = 0.7f
+private const val MISSING_TYPE_ALPHA = 0.5f
+private const val EMPTY_STATE_ALPHA = 0.5f
+private const val HINT_TEXT_ALPHA = 0.7f
 
 // Streak Badge constants
 private val STREAK_BADGE_CORNER_RADIUS = 999.dp
@@ -92,6 +106,8 @@ private val BUTTON_CORNER_RADIUS = 16.dp
 private val BUTTON_ICON_SPACING = 8.dp
 private val SELECTION_BORDER_WIDTH = 2.dp
 
+// TODO: fix sticky card width issue so it takes the full width of the screen, and also fix sticky card animation
+
 @Composable
 fun DefenseQuizRoute(
     navItems: List<AppNavItem>,
@@ -109,7 +125,6 @@ fun DefenseQuizRoute(
         selectedType = state.selectedType,
         onTypeSelect = viewModel::selectType,
         onBucketClick = viewModel::assignSelectedToBucket,
-        onAssign = viewModel::assignType,
         onFillRemaining = viewModel::assignAllUnassignedToNeutral,
         onSubmit = viewModel::submit,
         onNext = viewModel::nextQuestion,
@@ -117,6 +132,7 @@ fun DefenseQuizRoute(
     )
 }
 
+@SuppressLint("FrequentlyChangingValue")
 @Composable
 fun DefenseQuizScreen(
     defenderPrimary: PokemonType?,
@@ -129,7 +145,6 @@ fun DefenseQuizScreen(
     selectedType: PokemonType?,
     onTypeSelect: (PokemonType?) -> Unit,
     onBucketClick: (Effectiveness) -> Unit,
-    onAssign: (PokemonType, Effectiveness?) -> Unit,
     onFillRemaining: () -> Unit,
     onSubmit: () -> Unit,
     onNext: () -> Unit,
@@ -142,6 +157,12 @@ fun DefenseQuizScreen(
             MaterialTheme.colorScheme.background
         )
     )
+    val scrollState = rememberScrollState()
+    val density = LocalDensity.current
+    val stickyRange = STICKY_HEADER_MAX_HEIGHT - STICKY_HEADER_MIN_HEIGHT
+    val stickyRangePx = with(density) { stickyRange.toPx() }
+    val collapseFraction = (scrollState.value.toFloat() / stickyRangePx).coerceIn(0f, 1f)
+
     Scaffold(
         containerColor = Color.Transparent,
         topBar = {
@@ -180,10 +201,10 @@ fun DefenseQuizScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = SCREEN_PADDING_HORIZONTAL)
-                    .verticalScroll(rememberScrollState()),
+                    .verticalScroll(scrollState),
                 verticalArrangement = Arrangement.spacedBy(MAIN_CONTENT_SPACING)
             ) {
-                DefenderCard(primary = defenderPrimary, secondary = defenderSecondary)
+                Spacer(modifier = Modifier.height(STICKY_HEADER_MAX_HEIGHT))
 
                 EffectivenessBuckets(
                     assignments = assignments,
@@ -192,7 +213,6 @@ fun DefenseQuizScreen(
                     selectedType = selectedType,
                     onTypeSelect = onTypeSelect,
                     onBucketClick = onBucketClick,
-                    onAssign = onAssign,
                     isSubmitted = isSubmitted
                 )
 
@@ -229,27 +249,65 @@ fun DefenseQuizScreen(
                 }
                 Spacer(modifier = Modifier.height(BOTTOM_SPACER_HEIGHT))
             }
+
+            DefenderCard(
+                primary = defenderPrimary,
+                secondary = defenderSecondary,
+                collapseFraction = collapseFraction,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+            )
         }
     }
 }
 
 @Composable
-private fun DefenderCard(primary: PokemonType?, secondary: PokemonType?) {
+private fun DefenderCard(
+    primary: PokemonType?,
+    secondary: PokemonType?,
+    collapseFraction: Float,
+    modifier: Modifier = Modifier
+) {
+    val cardHeight =
+        STICKY_HEADER_MIN_HEIGHT + (STICKY_HEADER_MAX_HEIGHT - STICKY_HEADER_MIN_HEIGHT) * (1f - collapseFraction)
+    val contentAlpha = (1f - collapseFraction * STICKY_HEADER_ALPHA_THRESHOLD).coerceIn(0f, 1f)
+    val cardElevation = if (collapseFraction > 0f) STICKY_HEADER_ELEVATION else 0.dp
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier
+            .height(cardHeight)
+            .layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints.copy(minWidth = 0))
+                val contentWidth = placeable.width
+                val maxWidth = constraints.maxWidth
+
+                val targetWidth = (maxWidth - (maxWidth - contentWidth) * collapseFraction).toInt()
+
+                layout(targetWidth, placeable.height) {
+                    placeable.placeRelative((targetWidth - contentWidth) / 2, 0)
+                }
+            }
+            .animateContentSize(),
         shape = RoundedCornerShape(CARD_CORNER_RADIUS_LARGE),
+        elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
-            modifier = Modifier.padding(CARD_CONTENT_PADDING),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(horizontal = STICKY_HEADER_HORIZONTAL_PADDING),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                "Categorize all attacker types for:",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(MAIN_CONTENT_SPACING))
+            if (contentAlpha > 0f) {
+                Text(
+                    "Categorize all attacker types for:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.alpha(contentAlpha)
+                )
+                Spacer(modifier = Modifier.height((MAIN_CONTENT_SPACING.value * contentAlpha).dp))
+            }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(BUCKET_SPACING)
@@ -270,22 +328,22 @@ private fun EffectivenessBuckets(
     selectedType: PokemonType?,
     onTypeSelect: (PokemonType?) -> Unit,
     onBucketClick: (Effectiveness) -> Unit,
-    onAssign: (PokemonType, Effectiveness?) -> Unit,
     isSubmitted: Boolean
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(BUCKET_SPACING)) {
         Effectiveness.ordered.forEach { effectiveness ->
             val typesInBucket = assignments.filter { it.value == effectiveness }.keys.toList()
             val correctInBucket = correctAssignments?.filter { it.value == effectiveness }?.keys?.toList() ?: emptyList()
-            
-            // Missing types: Types that SHOULD be here but the user didn't place here
+
             val missingTypes = if (isSubmitted) {
                 correctInBucket.filter { it !in typesInBucket }
             } else emptyList()
 
             val bucketColor by animateColorAsState(
-                if (selectedType != null && !isSubmitted) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                else MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                if (selectedType != null && !isSubmitted) MaterialTheme.colorScheme.primaryContainer.copy(
+                    alpha = BUCKET_HIGHLIGHT_ALPHA
+                )
+                else MaterialTheme.colorScheme.surface.copy(alpha = BUCKET_SURFACE_ALPHA),
                 label = "bucket_highlight"
             )
             Card(
@@ -325,10 +383,9 @@ private fun EffectivenessBuckets(
                             Text(
                                 "None",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = EMPTY_STATE_ALPHA)
                             )
                         }
-                        // User's placements
                         typesInBucket.forEach { type ->
                             SelectableTypeBadge(
                                 type = type,
@@ -342,9 +399,10 @@ private fun EffectivenessBuckets(
                                 }
                             )
                         }
-                        // Missing correct answers
                         missingTypes.forEach { type ->
-                            Box(modifier = Modifier.width(BADGE_WIDTH).alpha(0.5f)) {
+                            Box(modifier = Modifier
+                                .width(BADGE_WIDTH)
+                                .alpha(MISSING_TYPE_ALPHA)) {
                                 TypeBadge(
                                     type = type,
                                     modifier = Modifier.fillMaxWidth()
@@ -439,7 +497,7 @@ private fun UnassignedTypes(
             Text(
                 "Tap a type to select it, then tap a tier to assign it.",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = HINT_TEXT_ALPHA)
             )
         }
     }
@@ -495,7 +553,10 @@ private fun StreakBadge(streak: Int) {
         modifier = Modifier
             .clip(RoundedCornerShape(STREAK_BADGE_CORNER_RADIUS))
             .background(color.copy(alpha = STREAK_BADGE_ALPHA))
-            .padding(horizontal = STREAK_BADGE_HORIZONTAL_PADDING, vertical = STREAK_BADGE_VERTICAL_PADDING),
+            .padding(
+                horizontal = STREAK_BADGE_HORIZONTAL_PADDING,
+                vertical = STREAK_BADGE_VERTICAL_PADDING
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
