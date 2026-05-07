@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -42,6 +43,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -100,6 +102,7 @@ fun DefenseQuizRoute(
         defenderPrimary = state.defenderPrimary,
         defenderSecondary = state.defenderSecondary,
         assignments = state.assignments,
+        correctAssignments = state.correctAssignments,
         validationResults = state.validationResults,
         isSubmitted = state.isSubmitted,
         streak = state.streak,
@@ -107,6 +110,7 @@ fun DefenseQuizRoute(
         onTypeSelect = viewModel::selectType,
         onBucketClick = viewModel::assignSelectedToBucket,
         onAssign = viewModel::assignType,
+        onFillRemaining = viewModel::assignAllUnassignedToNeutral,
         onSubmit = viewModel::submit,
         onNext = viewModel::nextQuestion,
         navItems = navItems
@@ -118,6 +122,7 @@ fun DefenseQuizScreen(
     defenderPrimary: PokemonType?,
     defenderSecondary: PokemonType?,
     assignments: Map<PokemonType, Effectiveness?>,
+    correctAssignments: Map<PokemonType, Effectiveness>?,
     validationResults: Map<PokemonType, Boolean>?,
     isSubmitted: Boolean,
     streak: Int,
@@ -125,6 +130,7 @@ fun DefenseQuizScreen(
     onTypeSelect: (PokemonType?) -> Unit,
     onBucketClick: (Effectiveness) -> Unit,
     onAssign: (PokemonType, Effectiveness?) -> Unit,
+    onFillRemaining: () -> Unit,
     onSubmit: () -> Unit,
     onNext: () -> Unit,
     navItems: List<AppNavItem>
@@ -181,6 +187,7 @@ fun DefenseQuizScreen(
 
                 EffectivenessBuckets(
                     assignments = assignments,
+                    correctAssignments = correctAssignments,
                     validationResults = validationResults,
                     selectedType = selectedType,
                     onTypeSelect = onTypeSelect,
@@ -194,6 +201,7 @@ fun DefenseQuizScreen(
                     validationResults = validationResults,
                     selectedType = selectedType,
                     onTypeSelect = onTypeSelect,
+                    onFillRemaining = onFillRemaining,
                     isSubmitted = isSubmitted
                 )
 
@@ -257,6 +265,7 @@ private fun DefenderCard(primary: PokemonType?, secondary: PokemonType?) {
 @Composable
 private fun EffectivenessBuckets(
     assignments: Map<PokemonType, Effectiveness?>,
+    correctAssignments: Map<PokemonType, Effectiveness>?,
     validationResults: Map<PokemonType, Boolean>?,
     selectedType: PokemonType?,
     onTypeSelect: (PokemonType?) -> Unit,
@@ -267,6 +276,13 @@ private fun EffectivenessBuckets(
     Column(verticalArrangement = Arrangement.spacedBy(BUCKET_SPACING)) {
         Effectiveness.ordered.forEach { effectiveness ->
             val typesInBucket = assignments.filter { it.value == effectiveness }.keys.toList()
+            val correctInBucket = correctAssignments?.filter { it.value == effectiveness }?.keys?.toList() ?: emptyList()
+            
+            // Missing types: Types that SHOULD be here but the user didn't place here
+            val missingTypes = if (isSubmitted) {
+                correctInBucket.filter { it !in typesInBucket }
+            } else emptyList()
+
             val bucketColor by animateColorAsState(
                 if (selectedType != null && !isSubmitted) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                 else MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
@@ -305,13 +321,14 @@ private fun EffectivenessBuckets(
                         verticalArrangement = Arrangement.spacedBy(BUCKET_SPACING),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        if (typesInBucket.isEmpty()) {
+                        if (typesInBucket.isEmpty() && missingTypes.isEmpty()) {
                             Text(
                                 "None",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                             )
                         }
+                        // User's placements
                         typesInBucket.forEach { type ->
                             SelectableTypeBadge(
                                 type = type,
@@ -324,6 +341,30 @@ private fun EffectivenessBuckets(
                                     }
                                 }
                             )
+                        }
+                        // Missing correct answers
+                        missingTypes.forEach { type ->
+                            Box(modifier = Modifier.width(BADGE_WIDTH).alpha(0.5f)) {
+                                TypeBadge(
+                                    type = type,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .size(STATUS_ICON_SIZE)
+                                        .background(VgcTeal, CircleShape)
+                                        .padding(STATUS_ICON_PADDING),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Check,
+                                        contentDescription = "Should be here",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(STATUS_ICON_INNER_SIZE)
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -339,6 +380,7 @@ private fun UnassignedTypes(
     validationResults: Map<PokemonType, Boolean>?,
     selectedType: PokemonType?,
     onTypeSelect: (PokemonType?) -> Unit,
+    onFillRemaining: () -> Unit,
     isSubmitted: Boolean
 ) {
     val unassigned = assignments.filter { it.value == null }.keys.toList()
@@ -350,11 +392,30 @@ private fun UnassignedTypes(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(BUCKET_CONTENT_PADDING)) {
-            Text(
-                "Attacker Types",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "Attacker Types",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (!isSubmitted) {
+                    Button(
+                        onClick = onFillRemaining,
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                        modifier = Modifier.height(32.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    ) {
+                        Text("Fill 1x", style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(BUCKET_SPACING))
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(BUCKET_SPACING),

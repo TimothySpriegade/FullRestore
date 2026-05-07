@@ -7,6 +7,7 @@ data class DefenseQuizUiState(
     val defenderPrimary: PokemonType? = null,
     val defenderSecondary: PokemonType? = null,
     val assignments: Map<PokemonType, Effectiveness?> = PokemonType.entries.associateWith { null },
+    val correctAssignments: Map<PokemonType, Effectiveness>? = null,
     val validationResults: Map<PokemonType, Boolean>? = null,
     val isSubmitted: Boolean = false,
     val streak: Int = 0,

@@ -41,11 +41,28 @@ class DefenseQuizViewModel(
         assignType(selected, effectiveness)
     }
 
+    fun assignAllUnassignedToNeutral() {
+        if (_state.value.isSubmitted) return
+        _state.update { state ->
+            val newAssignments = state.assignments.toMutableMap()
+            PokemonType.entries.forEach { type ->
+                if (newAssignments[type] == null) {
+                    newAssignments[type] = Effectiveness.NEUTRAL
+                }
+            }
+            state.copy(
+                assignments = newAssignments,
+                selectedType = null
+            )
+        }
+    }
+
     fun submit() {
         val state = _state.value
         if (state.isSubmitted) return
 
         val results = mutableMapOf<PokemonType, Boolean>()
+        val correctMap = mutableMapOf<PokemonType, Effectiveness>()
         var allCorrect = true
 
         PokemonType.entries.forEach { attacker ->
@@ -54,6 +71,7 @@ class DefenseQuizViewModel(
                 defender = state.defenderPrimary!!,
                 secondary = state.defenderSecondary
             )
+            correctMap[attacker] = correct
             val assigned = state.assignments[attacker]
             val isCorrect = correct == assigned
             results[attacker] = isCorrect
@@ -63,6 +81,7 @@ class DefenseQuizViewModel(
         _state.update {
             it.copy(
                 validationResults = results,
+                correctAssignments = correctMap,
                 isSubmitted = true,
                 streak = if (allCorrect) it.streak + 1 else 0
             )
@@ -85,6 +104,7 @@ class DefenseQuizViewModel(
                 defenderPrimary = primary,
                 defenderSecondary = secondary,
                 assignments = PokemonType.entries.associateWith { null },
+                correctAssignments = null,
                 validationResults = null,
                 isSubmitted = false,
                 selectedType = null
