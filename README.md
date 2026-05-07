@@ -17,91 +17,86 @@ which I found annoying. Then I remembered that I am a software developer and our
 is 'I'll just do it myself',
 so I thought of this little toolbox for VGC Pokémon.
 
-## Highlights
-- Type effectiveness quiz with instant feedback and streak tracking.
-- Three quiz modes: single defender, dual defender, or random defenders.
-- Bottom navigation with a dedicated Settings tab.
-- Pokedex tab with searchable list, sprite images, and filters.
-- Settings tab where each feature is taggable for further customizability
-- Light mode toggle persists across restarts using DataStore preferences.
-- Custom Material 3 color system and type badges for clear visual cues.
-- Team coverage tool to analyze strengths and weaknesses for 6 type-only picks, including weakness stacking analysis.
+## Key Features
+
+### Quiz Suite
+
+- **Type Quiz:** Practice offensive matchups by picking the correct damage modifier for specific
+  attacker vs. defender scenarios.
+- **Defense Quiz:** A more advanced mode where you must categorize all 18 attacker types against a
+  specific defender (single or dual type). Features a smooth floating island sticky header and
+  streak tracking.
+
+### Pokedex and Data
+
+- **Searchable Database:** Browse all Pokémon with a local Room database.
+- **Advanced Filtering:** Filter by name, type, Pokedex number, base stat total, or tags (Legendary,
+  Mythical, Baby).
+- **Offline Access:** All data and sprites are stored locally—no network required.
+
+### Team Coverage
+
+- **Coverage Analysis:** Enter up to six Pokémon to evaluate offensive coverage and defensive
+  vulnerabilities.
+- **Weakness Stacking:** Identify critical core flaws by seeing how many team members share the same
+  weaknesses.
+
+### Customization
+
+- **Theme Support:** Toggle between Light and Dark modes (persists via DataStore).
+- **VGC Aesthetic:** Custom design system using Material 3 with official type colors and badges.
 
 ## Tech Stack
-- Kotlin + Jetpack Compose
-- Material 3 (Compose)
-- AndroidX Lifecycle + ViewModel
-- DataStore Preferences
-- Gradle Version Catalog
+
+- **Language:** Kotlin
+- **UI Framework:** Jetpack Compose (Material 3)
+- **Architecture:** Clean Architecture with Feature-based modularity
+- **Persistence:**
+  - **Room:** Local Pokémon database.
+  - **DataStore:** User preferences and settings.
+- **Dependency Management:** Gradle Version Catalog
+
+## Project Structure
+
+```text
+app/src/main/kotlin/dev/timothyspriegade/fullrestore/
+├── core/
+│   ├── common/          # Global constants and APP_TAGLINE
+│   ├── designsystem/    # Theme, Colors, Typography, and shared UI Components
+│   └── util/            # Type chart logic and effectiveness calculation
+├── data/
+│   └── local/           # Room Database, DAOs, and Entities
+├── domain/
+│   ├── model/           # Framework-agnostic Domain Models
+│   └── usecase/         # Business logic (Quiz generation, Stats calculation)
+└── features/
+    ├── defensequiz/     # Advanced Defensive categorization quiz
+    ├── pokedex/         # Searchable Pokemon database and filtering
+    ├── settings/        # User preferences and persistence
+    ├── teamcoverage/    # Team analysis and weakness stacking
+    └── typequiz/        # Standard offensive effectiveness quiz
+```
 
 ## Getting Started
 
 ### Requirements
-- Android Studio (Ladybug or newer recommended)
-- JDK 17 (recommended by Android Studio)
-- Android SDK with API 26+ (minSdk = 26)
 
-### Run in Android Studio
-1. Open the project folder.
-2. Let Gradle sync finish.
-3. Select a device or emulator.
-4. Run the `app` configuration.
+- Android Studio (Ladybug or newer)
+- JDK 17
+- Android SDK API 26+
 
-### Run from CLI
-```bash
-./gradlew assembleDebug
-./gradlew installDebug
-```
+### Setup
 
-## Gameplay
-- Each question picks an attacker and one or two defenders.
-- Choose the correct damage modifier (4x, 2x, 1x, 0.5x, 0.25x, immune).
-- Your streak increases with correct answers and resets on a miss.
+1. Clone the repository.
+2. Open in Android Studio and allow Gradle to sync.
+3. Run the app configuration on an emulator or physical device.
 
-## Settings
-- Navigate to the Settings tab in the bottom bar.
-- Enable Light mode to switch from the default Dark palette.
-- The setting is persisted via DataStore and restored on app launch.
+## Design Principles
 
-## Pokedex
+- **Speed First:** No splash screens or loading states for data lookups.
+- **High Contrast:** Clear visual cues using type badges and status icons for immediate feedback.
+- **Responsive:** Layouts adapt smoothly to maximize screen real estate.
 
-- Open the Pokedex tab to browse all Pokemon in the local database.
-- Search by name, Pokedex number, or type.
-- Use filters for type, tags (Legendary/Mythical/Baby), and minimum base stat total.
-- Each entry shows its sprite, types, and base stats.
-
-## Team Coverage
-
-- Enter up to six Pokemon by type only (primary + optional secondary).
-- Get offensive coverage (best hit) and defensive profile (worst weakness).
-- **Weakness Stacking:** Analyze how many team members are vulnerable to specific types to identify critical core flaws.
-
-## Project Structure
-```
-app/src/main/kotlin/dev/timothyspriegade/fullrestore/
-  core/
-    common/          App constants
-    designsystem/    Theme, colors, typography, shared UI components
-    util/            Type chart logic
-  data/
-    local/           Room database, entities, and DAOs
-  domain/
-    model/           Domain models (types, effectiveness, quiz mode)
-    usecase/         Quiz generation and effectiveness calculation
-  features/
-    settings/        Settings UI + persistence
-    pokedex/         Pokedex UI + ViewModel
-    typequiz/        Quiz UI + ViewModel
-```
-
-## Design System
-- Light and dark palettes are defined in `app/src/main/kotlin/dev/timothyspriegade/fullrestore/core/designsystem/Theme.kt`.
-- Colors live in `app/src/main/kotlin/dev/timothyspriegade/fullrestore/core/designsystem/Color.kt`.
-
-## Persistence
-- Settings are stored using DataStore Preferences in
-  `app/src/main/kotlin/dev/timothyspriegade/fullrestore/features/settings/data/UserSettingsStore.kt`.
-
-## Build Notes
-- The app uses the Compose BOM pinned in `gradle/libs.versions.toml`.
-- No network calls or external APIs are required.
+---
+*Full Restore is a fan project and is not affiliated with or endorsed by Nintendo, Creatures Inc.,
+GAME FREAK inc., or The Pokémon Company.*

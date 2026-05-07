@@ -78,6 +78,7 @@ private val STICKY_HEADER_MIN_HEIGHT = 50.dp
 private const val STICKY_HEADER_ALPHA_THRESHOLD = 2.5f
 private val STICKY_HEADER_ELEVATION = 8.dp
 private val STICKY_HEADER_HORIZONTAL_PADDING = 24.dp
+private val STICKY_HEADER_TOP_MARGIN = 4.dp
 
 // Card constants
 private val CARD_CORNER_RADIUS_LARGE = 24.dp
@@ -105,8 +106,6 @@ private val STATUS_ICON_PADDING = 2.dp
 private val BUTTON_CORNER_RADIUS = 16.dp
 private val BUTTON_ICON_SPACING = 8.dp
 private val SELECTION_BORDER_WIDTH = 2.dp
-
-// TODO: fix sticky card width issue so it takes the full width of the screen, and also fix sticky card animation
 
 @Composable
 fun DefenseQuizRoute(
@@ -204,7 +203,7 @@ fun DefenseQuizScreen(
                     .verticalScroll(scrollState),
                 verticalArrangement = Arrangement.spacedBy(MAIN_CONTENT_SPACING)
             ) {
-                Spacer(modifier = Modifier.height(STICKY_HEADER_MAX_HEIGHT))
+                Spacer(modifier = Modifier.height(STICKY_HEADER_MAX_HEIGHT + STICKY_HEADER_TOP_MARGIN))
 
                 EffectivenessBuckets(
                     assignments = assignments,
@@ -256,6 +255,8 @@ fun DefenseQuizScreen(
                 collapseFraction = collapseFraction,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
+                    .padding(horizontal = SCREEN_PADDING_HORIZONTAL)
+                    .padding(top = STICKY_HEADER_TOP_MARGIN)
             )
         }
     }
@@ -283,11 +284,13 @@ private fun DefenderCard(
 
                 val targetWidth = (maxWidth - (maxWidth - contentWidth) * collapseFraction).toInt()
 
-                layout(targetWidth, placeable.height) {
-                    placeable.placeRelative((targetWidth - contentWidth) / 2, 0)
+                layout(targetWidth, constraints.maxHeight) {
+                    placeable.placeRelative(
+                        (targetWidth - contentWidth) / 2,
+                        (constraints.maxHeight - placeable.height) / 2
+                    )
                 }
-            }
-            .animateContentSize(),
+            },
         shape = RoundedCornerShape(CARD_CORNER_RADIUS_LARGE),
         elevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -295,7 +298,8 @@ private fun DefenderCard(
         Column(
             modifier = Modifier
                 .fillMaxHeight()
-                .padding(horizontal = STICKY_HEADER_HORIZONTAL_PADDING),
+                .padding(horizontal = STICKY_HEADER_HORIZONTAL_PADDING)
+                .animateContentSize(alignment = Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -333,7 +337,9 @@ private fun EffectivenessBuckets(
     Column(verticalArrangement = Arrangement.spacedBy(BUCKET_SPACING)) {
         Effectiveness.ordered.forEach { effectiveness ->
             val typesInBucket = assignments.filter { it.value == effectiveness }.keys.toList()
-            val correctInBucket = correctAssignments?.filter { it.value == effectiveness }?.keys?.toList() ?: emptyList()
+            val correctInBucket =
+                correctAssignments?.filter { it.value == effectiveness }?.keys?.toList()
+                    ?: emptyList()
 
             val missingTypes = if (isSubmitted) {
                 correctInBucket.filter { it !in typesInBucket }
@@ -400,9 +406,11 @@ private fun EffectivenessBuckets(
                             )
                         }
                         missingTypes.forEach { type ->
-                            Box(modifier = Modifier
-                                .width(BADGE_WIDTH)
-                                .alpha(MISSING_TYPE_ALPHA)) {
+                            Box(
+                                modifier = Modifier
+                                    .width(BADGE_WIDTH)
+                                    .alpha(MISSING_TYPE_ALPHA)
+                            ) {
                                 TypeBadge(
                                     type = type,
                                     modifier = Modifier.fillMaxWidth()
