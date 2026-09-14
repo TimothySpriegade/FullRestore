@@ -13,7 +13,7 @@ ksp = "2.3.7"
 composeBom = "2026.05.00"
 coil = "2.7.0"
 datastoreCore = "1.2.1"
-roomCommonJvm = "2.8.4"
+roomCommonJvm = "2.8.5"
 roomKtx = "2.8.4"
 roomCompiler = "2.8.4"
 
